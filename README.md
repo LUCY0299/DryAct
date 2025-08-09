@@ -1,5 +1,23 @@
-<<<<<<< HEAD
 # DryAct
+
+## 如何啟動專案
+
+### 前端 (Vue.js)
+
+1. **進入前端資料夾**
+   ```bash
+   cd frontend/dryact-frontend
+   ```
+
+2. **啟動前端開發伺服器**
+   ```bash
+   npm run dev
+   ```
+   接著請依照終端機提示的網址開啟頁面。
+
+3. **開啟網頁**
+   http://localhost:5173/
+---
 
 ## 前後端設計框架
 - 前端用vue.js
@@ -25,4 +43,3 @@
     <iframe data-tally-src="https://tally.so/r/mBWe85?transparentBackground=1" width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0" title="乾旱問卷"></iframe>
   </body>
 </html>
->>>>>>> d4c4316 (first commit)

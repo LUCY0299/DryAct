@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>乾旱風險情境模擬器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基本樣式與字體設定 */
+        body {
+            font-family: 'Noto Sans TC', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #2c3e50; /* 深藍灰色 */
+            color: #ecf0f1; /* 淺灰色 */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        /* 遊戲容器 */
+        #game-container {
+            background-color: #34495e; /* 稍淺的藍灰色 */
+            border: 2px solid #55798c;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 畫面切換控制 */
+        .game-screen {
+            display: none; /* 預設隱藏，由 JavaScript 控制顯示 */
+        }
+        #start-screen {
+            display: block; /* 初始顯示開始畫面 */
+        }
+
+        /* 標題與內文 */
+        h1 {
+            color: #ecf0f1;
+            margin-bottom: 15px;
+            font-size: 2.8em;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+        h2 {
+            color: #9b59b6; /* 紫色 */
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+        h3 {
+            color: #3498db; /* 藍色 */
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.4em;
+        }
+        p {
+            margin-bottom: 12px;
+        }
+
+        /* 遊戲主畫面佈局 */
+        #game-play-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 頂部資訊欄（週數、分數） */
+        #top-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #2c3e50;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        #week-display, #score-display {
+            color: #f1c40f; /* 黃色 */
+        }
+
+        /* 主要內容區塊（問題與水庫） */
+        #main-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        /* 問題區域 */
+        #question-area {
+            flex: 2; /* 佔據較多空間 */
+            background-color: #4a6270;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: left;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+        #question-area p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        /* 選項按鈕容器 */
+        #choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .choice-button {
+            background-color: #27ae60; /* 綠色 */
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.05em;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            text-align: left;
+        }
+        .choice-button:hover {
+            background-color: #2ecc71; /* 較淺的綠色 */
+            transform: translateY(-2px);
+        }
+        .choice-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .choice-button:disabled {
+            background-color: #7f8c8d; /* 禁用時的顏色 */
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 水庫顯示區域 */
+        #reservoir-area {
+            flex: 1; /* 佔據較少空間 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background-color: #4a6270;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+        #reservoir-container {
+            width: 120px;
+            height: 200px;
+            border: 4px solid #7f8c8d; /* 灰色邊框 */
+            border-radius: 10px;
+            background-color: #bdc3c7; /* 淺灰色代表空的部分 */
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+        #water-level {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #3498db; /* 藍色代表水 */
+            transition: height 1s ease-out, background-color 0.5s ease-out; /* 平滑過渡動畫 */
+        }
+        /* 水位燈號 */
+        #reservoir-lights {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .light {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #7f8c8d; /* 預設關閉 */
+            border: 1px solid rgba(0,0,0,0.3);
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+        .light.red { background-color: #e74c3c; box-shadow: 0 0 10px #e74c3c, inset 0 0 5px #e74c3c; }
+        .light.yellow { background-color: #f1c40f; box-shadow: 0 0 10px #f1c40f, inset 0 0 5px #f1c40f; }
+        .light.green { background-color: #2ecc71; box-shadow: 0 0 10px #2ecc71, inset 0 0 5px #2ecc71; }
+
+
+        /* 回饋與知識卡片 */
+        #feedback-area {
+            background-color: #2c3e50;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 80px;
+            text-align: left;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+            margin-top: 20px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        #feedback-area.warning {
+            border: 2px solid #e74c3c; /* 紅色邊框 */
+            background-color: #5c3232; /* 較深的紅色背景 */
+            color: #e74c3c;
+        }
+        #feedback-area.positive {
+            border: 2px solid #2ecc71; /* 綠色邊框 */
+            background-color: #2a5c40; /* 較深的綠色背景 */
+            color: #2ecc71;
+        }
+        #feedback-area.info {
+            border: 2px solid #3498db; /* 藍色邊框 */
+            background-color: #2a3b4c; /* 較深的藍色背景 */
+            color: #3498db;
+        }
+
+        #knowledge-card {
+            background-color: #f39c12; /* 橘色 */
+            color: #2c3e50;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: bold;
+            display: none; /* 預設隱藏 */
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+            text-align: left;
+        }
+
+        /* 已學習行為列表 */
+        #learned-behaviors-list {
+            margin-top: 20px;
+            text-align: left;
+            background-color: #4a6270;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
+        }
+        #learned-behaviors-list ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+        #learned-behaviors-list li {
+            background-color: #55798c;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #learned-behaviors-list li::before {
+            content: '✓'; /* 列表項目前的勾選符號 */
+            color: #2ecc71;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        /* 結束畫面按鈕 */
+        #end-screen button, #start-screen button {
+             background-color: #e67e22; /* 橘色 */
+             color: white;
+             padding: 14px 20px;
+             border: none;
+             border-radius: 8px;
+             cursor: pointer;
+             font-size: 1.05em;
+             transition: background-color 0.3s ease;
+             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+             margin-top: 15px;
+        }
+        #end-screen button:hover, #start-screen button:hover {
+            background-color: #f39c12;
+        }
+
+        /* 問卷按鈕樣式 */
+        #show-tally-btn {
+            background-color: #9b59b6; /* 紫色 */
+        }
+        #show-tally-btn:hover {
+            background-color: #8e44ad;
+        }
+
+        /* Tally 問卷樣式 */
+        #tally-screen {
+            width: 100%;
+            height: 70vh;
+            min-height: 550px;
+            position: relative;
+        }
+
+        #tally-screen iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* RWD 響應式調整 */
+        @media (max-width: 768px) {
+            #main-content {
+                flex-direction: column; /* 小螢幕時垂直堆疊 */
+                align-items: center;
+            }
+            #question-area, #reservoir-area {
+                width: 100%;
+                flex: none; /* 取消 flex 比例 */
+            }
+            #reservoir-container {
+                height: 150px; /* 調整水庫高度 */
+            }
+            h1 { font-size: 2.2em; }
+            h2 { font-size: 1.5em; }
+            h3 { font-size: 1.2em; }
+            .choice-button { font-size: 0.95em; padding: 12px 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- 開始畫面 -->
+        <div id="start-screen" class="game-screen">
+            <h1>乾旱風險情境模擬器</h1>
+            <h2>「責任感 + 即時回饋 + 策略選擇」</h2>
+            <p>歡迎來到乾旱風險情境模擬器！在這個闖關遊戲中，您將扮演一個普通家庭的成員，面對社區水庫在乾旱期間的水情挑戰。</p>
+            <p>您的每一個用水選擇，都將直接影響社區水庫的水位和您獲得的節水分數。模擬將進行若干週，看看您能否幫助社區安全度過乾旱！</p>
+            <p><strong>遊戲目標：</strong>在規定週數內，維持社區水庫水位在安全線以上，並累積高分！</p>
+            <button id="start-game-btn">開始模擬</button>
+        </div>
+
+        <!-- 遊戲主畫面 -->
+        <div id="game-play-area" class="game-screen">
+            <div id="top-info">
+                <div id="week-display">第 1 題</div>
+                <div id="score-display">節水分數：0</div>
+            </div>
+
+            <div id="main-content">
+                <div id="question-area">
+                    <h3>情境挑戰：</h3>
+                    <p id="current-scenario-question">加載中...</p>
+                    <div id="choices-container">
+                        <!-- 選項按鈕會在這裡動態生成 -->
+                    </div>
+                </div>
+
+                <div id="reservoir-area">
+                    <h3>社區水庫</h3>
+                    <div id="reservoir-lights">
+                        <div id="light-red" class="light"></div>
+                        <div id="light-yellow" class="light"></div>
+                        <div id="light-green" class="light"></div>
+                    </div>
+                    <div id="reservoir-container">
+                        <div id="water-level" style="height: 50%;"></div>
+                    </div>
+                    <p>水位：<span id="water-level-text">50%</span></p>
+                </div>
+            </div>
+
+            <div id="feedback-area" class="info">
+                請選擇您的用水行為...
+            </div>
+            <div id="knowledge-card">
+                小知識：<span id="knowledge-text"></span>
+            </div>
+            <div id="learned-behaviors-list">
+                <h3>您學會的節水行為：</h3>
+                <ul id="behaviors-list-ul">
+                    <!-- 學會的行為會在這裡顯示 -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- 結束畫面 -->
+        <div id="end-screen" class="game-screen">
+            <h1>模擬結束！</h1>
+            <p id="end-message"></p>
+            <p>您的最終節水分數：<span id="final-score"></span></p>
+            <p id="water-impact-summary"></p>
+            <h3>您在此次模擬中學習到的節水行為：</h3>
+            <ul id="final-behaviors-list-ul">
+                <!-- 最終學會的行為會在這裡顯示 -->
+            </ul>
+            <button id="restart-game-btn">重新模擬</button>
+            <button id="show-tally-btn">填寫回饋問卷</button>
+        </div>
+
+        <!-- Tally 問卷畫面 -->
+        <div id="tally-screen" class="game-screen">
+             <!-- *** 修改點：移除了 URL 中的 ?transparentBackground=1 *** -->
+             <iframe data-tally-src="https://tally.so/r/wbJY62" width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0" title="乾旱問卷"></iframe>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DOM 元素引用 ---
+        const startGameBtn = document.getElementById('start-game-btn');
+        const restartGameBtn = document.getElementById('restart-game-btn');
+        const startScreen = document.getElementById('start-screen');
+        const gamePlayArea = document.getElementById('game-play-area');
+        const endScreen = document.getElementById('end-screen');
+        const tallyScreen = document.getElementById('tally-screen');
+        const showTallyBtn = document.getElementById('show-tally-btn');
+
+        const weekDisplay = document.getElementById('week-display');
+        const scoreDisplay = document.getElementById('score-display');
+        const currentScenarioQuestion = document.getElementById('current-scenario-question');
+        const choicesContainer = document.getElementById('choices-container');
+        const waterLevelDiv = document.getElementById('water-level');
+        const waterLevelText = document.getElementById('water-level-text');
+        const feedbackArea = document.getElementById('feedback-area');
+        const knowledgeCard = document.getElementById('knowledge-card');
+        const knowledgeText = document.getElementById('knowledge-text');
+        const behaviorsListUl = document.getElementById('behaviors-list-ul');
+        const finalBehaviorsListUl = document.getElementById('final-behaviors-list-ul');
+        const lightRed = document.getElementById('light-red');
+        const lightYellow = document.getElementById('light-yellow');
+        const lightGreen = document.getElementById('light-green');
+        const endMessage = document.getElementById('end-message');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const waterImpactSummary = document.getElementById('water-impact-summary');
+
+        // --- 遊戲狀態變數 ---
+        let currentWeek = 0;
+        let communityWaterLevel = 50;
+        let waterSavingScore = 0;
+        let savedBehaviors = new Set();
+        const totalWeeks = 7;
+
+        // --- 遊戲情境數據 ---
+        const scenarios = [
+            {
+                question: "本週，您的家庭想清潔門前車道。您會怎麼做？",
+                choices: [
+                    { text: "直接用水管強力沖洗", waterChange: -15, scoreChange: -10, feedback: "大量沖洗會消耗寶貴水資源，水庫水位下降了！", knowledgeCard: "洗車若不使用高壓水槍，一次約耗水180-250公升。", behaviorLearned: null },
+                    { text: "使用掃帚清掃，只用少量水擦拭頑固污漬", waterChange: +10, scoreChange: 20, feedback: "做得好！您節省了大量用水，水庫水位上升了！", knowledgeCard: "乾式清掃可以大幅減少戶外用水量。", behaviorLearned: "乾式清掃習慣" }
+                ]
+            },
+            {
+                question: "您發現廁所馬桶水箱有點漏水。您會怎麼處理？",
+                choices: [
+                    { text: "暫時不理會，只是小漏水", waterChange: -10, scoreChange: -5, feedback: "水龍頭或馬桶漏水看似小事，但積少成多，水庫水位微降。", knowledgeCard: "一個馬桶小漏水每天可浪費數十甚至上百公升的水。", behaviorLearned: null },
+                    { text: "立即動手修復或找人修理", waterChange: +15, scoreChange: 25, feedback: "太棒了！及時修復漏水，避免了不必要的浪費，水庫水位明顯上升。", knowledgeCard: "檢查並修復家中漏水點是節水最有效的方式之一。", behaviorLearned: "及時修復漏水" }
+                ]
+            },
+            {
+                question: "這週需要洗衣服。您會怎麼洗？",
+                choices: [
+                    { text: "衣服不多，但還是分開多洗幾次", waterChange: -20, scoreChange: -15, feedback: "洗衣機滿載時才清洗能節省更多水，水庫水位下降較多。", knowledgeCard: "洗衣用水佔家戶用水比例高達22%，僅次於沖廁。", behaviorLearned: null },
+                    { text: "累積足夠的衣物後，再啟動洗衣機清洗", waterChange: +12, scoreChange: 22, feedback: "聰明的選擇！滿載清洗效益最高，水庫水位上升。", knowledgeCard: "洗衣機滿載時的耗水量與半載時差異不大，盡量滿載清洗。", behaviorLearned: "洗衣機滿載清洗" }
+                ]
+            },
+            {
+                question: "晚餐後，您有許多碗盤需要清洗。您會怎麼做？",
+                choices: [
+                    { text: "開著水龍頭，邊沖邊洗", waterChange: -18, scoreChange: -12, feedback: "邊沖邊洗非常浪費水，水庫水位下降。", knowledgeCard: "洗碗時開著水龍頭5分鐘可浪費約40公升水。", behaviorLearned: null },
+                    { text: "用臉盆或水槽盛水浸泡清洗，最後再統一沖淨", waterChange: +15, scoreChange: 25, feedback: "這是非常好的節水習慣，水庫水位上升了！", knowledgeCard: "採用蓄水方式清洗碗盤，比邊沖邊洗能節省約一半的用水量。", behaviorLearned: "蓄水清洗碗盤" }
+                ]
+            },
+            {
+                question: "您想給花園的植物澆水。您會選擇哪種方式？",
+                choices: [
+                    { text: "使用自來水管直接澆灌", waterChange: -12, scoreChange: -8, feedback: "自來水用於澆灌有些浪費，水庫水位微降。", knowledgeCard: "清晨或傍晚澆水可減少水分蒸發，提高利用率。", behaviorLearned: null },
+                    { text: "收集雨水或洗米水、洗菜水進行澆灌", waterChange: +18, scoreChange: 30, feedback: "絕佳的再生水利用！極大地支持了水庫水位。", knowledgeCard: "廚餘水如洗米水、洗菜水等，富含養分，是植物的天然營養劑。", behaviorLearned: "利用再生水澆灌" }
+                ]
+            },
+            {
+                question: "當您淋浴時，您會怎麼做？",
+                choices: [
+                    { text: "開著熱水，讓水流一陣子才進去洗", waterChange: -15, scoreChange: -10, feedback: "等待熱水流出時的浪費很可觀，水庫水位下降。", knowledgeCard: "淋浴時間若能縮短1分鐘，可節省約9公升水。", behaviorLearned: null },
+                    { text: "迅速開啟淋浴，使用蓮蓬頭花灑，並減少淋浴時間", waterChange: +10, scoreChange: 20, feedback: "快速有效率！您的節水行為對水庫有益。", knowledgeCard: "安裝省水蓮蓬頭可減少30-50%的淋浴用水。", behaviorLearned: "縮短淋浴時間" }
+                ]
+            },
+            {
+                question: "社區停水了，您需要上廁所。您會怎麼做？",
+                choices: [
+                    { text: "使用儲存的飲用水沖馬桶", waterChange: -20, scoreChange: -15, feedback: "飲用水應優先用於飲用，水庫水位因不當使用而下降。", knowledgeCard: "應將飲用水與非飲用水分開儲存，避免混用造成浪費。", behaviorLearned: null },
+                    { text: "使用預先儲存的非飲用水（如洗澡水、洗衣水）來沖馬桶", waterChange: +25, scoreChange: 35, feedback: "明智之舉！您有效地利用了有限的水資源，水庫水位大幅上升！", knowledgeCard: "二次用水（灰水）的再利用是乾旱時期重要的節水策略。", behaviorLearned: "二次用水沖馬桶" }
+                ]
+            }
+        ];
+
+        // --- 遊戲邏輯函數 ---
+        function startGame() {
+            currentWeek = 1;
+            communityWaterLevel = 50;
+            waterSavingScore = 0;
+            savedBehaviors.clear();
+            showScreen(gamePlayArea);
+            updateUI();
+            loadWeekScenario(currentWeek);
+            feedbackArea.textContent = '請選擇您的用水行為...';
+            feedbackArea.className = 'feedback-area info';
+            knowledgeCard.style.display = 'none';
+            updateBehaviorsList();
+        }
+
+        function showScreen(screenElement) {
+            startScreen.style.display = 'none';
+            gamePlayArea.style.display = 'none';
+            endScreen.style.display = 'none';
+            tallyScreen.style.display = 'none';
+            if (screenElement === gamePlayArea) {
+                screenElement.style.display = 'flex';
+            } else {
+                screenElement.style.display = 'block';
+            }
+        }
+
+        function updateUI() {
+            weekDisplay.textContent = `第 ${currentWeek} 天 / 共 ${totalWeeks} 天`;
+            scoreDisplay.textContent = `節水分數：${waterSavingScore}`;
+            communityWaterLevel = Math.max(0, Math.min(100, communityWaterLevel));
+            waterLevelDiv.style.height = `${communityWaterLevel}%`;
+            waterLevelText.textContent = `${communityWaterLevel}%`;
+            lightRed.classList.remove('red');
+            lightYellow.classList.remove('yellow');
+            lightGreen.classList.remove('green');
+            if (communityWaterLevel <= 30) {
+                lightRed.classList.add('red');
+                waterLevelDiv.style.backgroundColor = '#e74c3c';
+            } else if (communityWaterLevel <= 60) {
+                lightYellow.classList.add('yellow');
+                waterLevelDiv.style.backgroundColor = '#f1c40f';
+            } else {
+                lightGreen.classList.add('green');
+                waterLevelDiv.style.backgroundColor = '#3498db';
+            }
+        }
+
+        function loadWeekScenario(week) {
+            if (week > totalWeeks) {
+                endGame(true);
+                return;
+            }
+            if (communityWaterLevel <= 0) {
+                endGame(false);
+                return;
+            }
+            const scenario = scenarios[week - 1];
+            currentScenarioQuestion.textContent = scenario.question;
+            choicesContainer.innerHTML = '';
+            scenario.choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.classList.add('choice-button');
+                button.textContent = choice.text;
+                button.addEventListener('click', () => handleChoice(index));
+                choicesContainer.appendChild(button);
+            });
+        }
+
+        function handleChoice(choiceIndex) {
+            const scenario = scenarios[currentWeek - 1];
+            const chosen = scenario.choices[choiceIndex];
+            communityWaterLevel += chosen.waterChange;
+            waterSavingScore += chosen.scoreChange;
+            if (chosen.behaviorLearned) {
+                savedBehaviors.add(chosen.behaviorLearned);
+            }
+            updateUI();
+            updateBehaviorsList();
+            feedbackArea.textContent = chosen.feedback;
+            if (chosen.waterChange < 0) {
+                feedbackArea.className = 'feedback-area warning';
+            } else {
+                feedbackArea.className = 'feedback-area positive';
+            }
+            if (chosen.knowledgeCard) {
+                knowledgeText.textContent = chosen.knowledgeCard;
+                knowledgeCard.style.display = 'block';
+            } else {
+                knowledgeCard.style.display = 'none';
+            }
+            document.querySelectorAll('.choice-button').forEach(btn => btn.disabled = true);
+            setTimeout(() => {
+                feedbackArea.textContent = '請選擇您的用水行為...';
+                feedbackArea.className = 'feedback-area info';
+                knowledgeCard.style.display = 'none';
+                currentWeek++;
+                loadWeekScenario(currentWeek);
+            }, 3000);
+        }
+
+        function updateBehaviorsList() {
+            behaviorsListUl.innerHTML = '';
+            if (savedBehaviors.size > 0) {
+                savedBehaviors.forEach(behavior => {
+                    const li = document.createElement('li');
+                    li.textContent = behavior;
+                    behaviorsListUl.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.innerHTML = '<i>尚未學習任何節水行為</i>';
+                li.style.cssText = `
+                    background-color: transparent;
+                    color: #bdc3c7;
+                    justify-content: center;
+                    text-align: center;
+                    padding: 20px 0;
+                    border: 2px dashed #55798c;
+                    border-radius: 5px;
+                    gap: 0;
+                    font-size: 0.9em;
+                `;
+                while (li.firstChild && li.firstChild.nodeType !== Node.ELEMENT_NODE) {
+                    li.removeChild(li.firstChild);
+                }
+                behaviorsListUl.appendChild(li);
+            }
+        }
+
+        function endGame(success) {
+            showScreen(endScreen);
+            finalScoreDisplay.textContent = waterSavingScore;
+            let waterSavedCubicMeters = (communityWaterLevel - 50) * 1.5;
+            if (communityWaterLevel > 0) {
+                endMessage.textContent = "恭喜您，社區成功度過了乾旱危機！";
+                endMessage.style.color = '#2ecc71';
+                if (waterSavedCubicMeters > 0) {
+                    const householdsDays = Math.round(waterSavedCubicMeters * 1000 / 150);
+                    waterImpactSummary.textContent = `您在本次模擬中為社區水庫淨增加了約 ${waterSavedCubicMeters.toFixed(1)} 立方公尺的水。這些水足以供應社區約 ${householdsDays} 戶家庭使用 1 天，為防範乾旱做出了巨大貢獻！`;
+                } else {
+                    waterImpactSummary.textContent = `您的努力讓社區水庫維持在安全水位。雖然沒有額外增加儲水量，但也避免了危機的發生。`;
+                }
+            } else {
+                endMessage.textContent = "很遺憾，社區水庫已枯竭，乾旱影響超出了預期。";
+                endMessage.style.color = '#e74c3c';
+                waterImpactSummary.textContent = `社區水庫水位最終降至 0%。我們未能成功度過這次乾旱，需要更嚴格的節水措施。`;
+            }
+            finalBehaviorsListUl.innerHTML = '';
+            if (savedBehaviors.size > 0) {
+                savedBehaviors.forEach(behavior => {
+                    const li = document.createElement('li');
+                    li.textContent = behavior;
+                    finalBehaviorsListUl.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = '您沒有學習到新的節水行為。';
+                finalBehaviorsListUl.appendChild(li);
+            }
+        }
+
+        function showTallyForm() {
+            if (!document.querySelector('script[src="https://tally.so/widgets/embed.js"]')) {
+                const script = document.createElement('script');
+                script.src = "https://tally.so/widgets/embed.js";
+                script.async = true;
+                document.head.appendChild(script);
+            }
+            showScreen(tallyScreen);
+        }
+
+        // --- 事件監聽器 ---
+        startGameBtn.addEventListener('click', startGame);
+        restartGameBtn.addEventListener('click', startGame);
+        showTallyBtn.addEventListener('click', showTallyForm);
+
+        // 頁面載入時的初始設定
+        updateUI();
+    </script>
+</body>
+</html>

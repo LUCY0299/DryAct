@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水資源永續挑戰</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基本設定 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Noto Sans TC', sans-serif;
+            overflow: hidden;
+            background-color: #0b132b;
+        }
+
+        /* --- 背景層 --- */
+        .background-gradient {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(-45deg, #0b132b, #1c2541, #3a506b, #5bc0be);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            z-index: 1;
+        }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        #particle-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
+        }
+
+        /* --- 內容層 --- */
+        .screen {
+            width: 100%; height: 100%; display: flex;
+            justify-content: center; align-items: center; text-align: center; color: #ffffff;
+            position: absolute; top: 0; left: 0;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+            z-index: 3;
+        }
+        .screen.active { opacity: 1; visibility: visible; }
+        #home-screen { flex-direction: column; }
+        .logo {
+            width: 180px; height: 180px; margin-bottom: 2rem;
+            animation: float 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(91, 192, 190, 0.5));
+            border-radius: 50%; object-fit: cover;
+        }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0px); } }
+        
+        h1 { font-size: 2.8rem; text-shadow: 0 0 10px rgba(0, 0, 0, 0.5); margin-bottom: 1rem; font-weight: 700; }
+        p.subtitle { font-size: 1.2rem; color: #cdd4e4; margin-bottom: 2.5rem; }
+
+        .start-button {
+            background-color: #5bc0be; color: #0b132b; border: none; padding: 15px 40px;
+            font-size: 1.2rem; font-weight: 700; border-radius: 50px; cursor: pointer;
+            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(91, 192, 190, 0.3); letter-spacing: 1px;
+        }
+        .start-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 25px rgba(91, 192, 190, 0.5); }
+        
+        #iframe-screen { background-color: #f0f2f5; }
+        #fhy-iframe { width: 100%; height: 100%; border: none; }
+        .next-page-button {
+            position: fixed; bottom: 30px; right: 30px; background-color: #e67e22; color: white;
+            padding: 12px 25px; border-radius: 50px; text-decoration: none; font-size: 1.1rem;
+            font-weight: 500; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .next-page-button:hover { background-color: #d35400; transform: scale(1.05); }
+
+        /* --- 教學引導層樣式 --- */
+        #tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1500;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        #tutorial-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #tutorial-highlight {
+            position: absolute;
+            border: 3px solid #5bc0be;
+            border-radius: 50px; /* 配合按鈕的圓角 */
+            box-shadow: 0 0 0 9999px rgba(11, 19, 43, 0.85);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #tutorial-text {
+            position: absolute;
+            background-color: rgba(44, 62, 80, 0.95);
+            color: #ecf0f1;
+            padding: 20px 25px;
+            border-radius: 10px;
+            max-width: 350px;
+            border: 1px solid #7f8c8d;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            line-height: 1.7;
+            font-size: 1.1rem;
+        }
+        #tutorial-text h3 {
+            margin: 0 0 10px 0;
+            color: #5bc0be;
+            font-size: 1.4rem;
+        }
+        #tutorial-text p {
+            margin: 0 0 15px 0;
+        }
+        #tutorial-text small {
+            color: #bdc3c7;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2.2rem; }
+            p.subtitle { font-size: 1rem; }
+            .logo { width: 140px; height: 140px; }
+            .start-button { padding: 12px 30px; font-size: 1rem;}
+            .next-page-button { bottom: 20px; right: 20px; padding: 10px 20px; font-size: 1rem;}
+            #tutorial-text { max-width: 80%; font-size: 1rem; padding: 15px 20px;}
+            #tutorial-text h3 { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景層 -->
+    <div class="background-gradient"></div>
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- 內容層 -->
+    <div id="home-screen" class="screen active">
+        <img src="dry-logo.png" alt="水資源 Logo" class="logo">
+        <h1>水資源永續挑戰</h1>
+        <p class="subtitle">了解水情，學習節水，應對未來的乾旱風險</p>
+        <button id="start-btn" class="start-button">開始挑戰</button>
+    </div>
+
+    <div id="iframe-screen" class="screen">
+        <iframe id="fhy-iframe" src="https://fhy.wra.gov.tw/fhyv2/#" title="經濟部水利署-水利防災資訊網"></iframe>
+        <a href="drought_simulator.html" class="next-page-button">下一頁 &raquo;</a>
+    </div>
+
+    <!-- 教學引導層 -->
+    <div id="tutorial-overlay">
+        <div id="tutorial-highlight"></div>
+        <div id="tutorial-text"></div>
+    </div>
+
+    <script>
+        // --- 粒子動畫邏輯 (保持不變) ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particlesArray;
+        class Particle{constructor(t,e,i,o,s,a){this.x=t,this.y=e,this.directionX=i,this.directionY=o,this.size=s,this.color=a}draw(){ctx.beginPath(),ctx.arc(this.x,this.y,this.size,0,2*Math.PI,!1),ctx.fillStyle=this.color,ctx.fill()}update(){this.x>canvas.width||this.x<0?this.directionX=-this.directionX:void 0,this.y>canvas.height||this.y<0?this.directionY=-this.directionY:void 0,this.x+=this.directionX,this.y+=this.directionY,this.draw()}}
+        function init(){particlesArray=[];const t=(canvas.height*canvas.width)/9e3;for(let e=0;e<t;e++){const t=2*Math.random()+1,i=Math.random()*(innerWidth-2*t-2*t)+2*t,o=Math.random()*(innerHeight-2*t-2*t)+2*t,s=.4*Math.random()-.2,a=.4*Math.random()-.2;particlesArray.push(new Particle(i,o,s,a,t,"rgba(200, 210, 255, 0.8)"))}}
+        function connect(){let t=1;for(let e=0;e<particlesArray.length;e++)for(let i=e;i<particlesArray.length;i++){const o=(particlesArray[e].x-particlesArray[i].x)*(particlesArray[e].x-particlesArray[i].x)+(particlesArray[e].y-particlesArray[i].y)*(particlesArray[e].y-particlesArray[i].y);o<canvas.width/7*(canvas.height/7)&&(t=1-o/2e4,ctx.strokeStyle=`rgba(180, 190, 255, ${t})`,ctx.lineWidth=1,ctx.beginPath(),ctx.moveTo(particlesArray[e].x,particlesArray[e].y),ctx.lineTo(particlesArray[i].x,particlesArray[i].y),ctx.stroke())}}
+        function animate(){requestAnimationFrame(animate),ctx.clearRect(0,0,innerWidth,innerHeight);for(let t=0;t<particlesArray.length;t++)particlesArray[t].update();connect()}
+        window.addEventListener("resize",()=>{canvas.width=innerWidth,canvas.height=innerHeight,init()}),init(),animate();
+
+
+        // --- 頁面切換與教學引導邏輯 ---
+        const startBtn = document.getElementById('start-btn');
+        const homeScreen = document.getElementById('home-screen');
+        const iframeScreen = document.getElementById('iframe-screen');
+        const tutorialOverlay = document.getElementById('tutorial-overlay');
+        const tutorialHighlight = document.getElementById('tutorial-highlight');
+        const tutorialText = document.getElementById('tutorial-text');
+
+        // *** 更新：修正步驟五文字框位置 ***
+        const tutorialSteps = [
+            { // 步驟一: 查看水情
+                highlight: { top: '13.5%', left: '2.5%', width: '95%', height: '83%', borderRadius: '8px' },
+                text: { top: '15%', left: '70%'},
+                content: `<h3>步驟 1：查看水情</h3><p>此區塊為核心水情儀表板。您可以從左側面板的下拉選單，或直接點擊右側地圖上的縣市，來查看該區域的即時水情。</p>`
+            },
+            { // 步驟二: 防災快訊
+                highlight: { top: '5.2%', left: '41.4%', width: '10.2%', height: '5.5%', borderRadius: '8px' },
+                text: { top: '15%', left: '25%' },
+                content: `<h3>步驟 2：防災快訊</h3><p>這裡是「防災快訊」區，點擊可查看重要的警示資訊，如水庫放水、高溫警報或停水通知。</p>`
+            },
+            { // 步驟三: 警戒資訊
+                highlight: { top: '5.2%', left: '51.7%', width: '10.2%', height: '5.5%', borderRadius: '8px' },
+                text: { top: '15%', left: '65%' },
+                content: `<h3>步驟 3：警戒資訊</h3><p>在「警戒資訊」中，您可以查詢全台灣各地的淹水、河川水位及水庫狀態的警戒等級。</p>`
+            },
+            { // 步驟四: 監控資訊
+                highlight: { top: '5.2%', left: '62%', width: '10.2%', height: '5.5%', borderRadius: '8px' },
+                text: { top: '15%', left: '40%' },
+                content: `<h3>步驟 4：監控資訊</h3><p>「監控資訊」是關鍵！這裡提供詳細的水庫水情視覺化圖表、即時資訊與歷史數據比對分析。</p>`
+            },
+            { // 步驟五: 下一頁按鈕 (修正後的位置)
+                highlight: { top: 'calc(100% - 78px)', left: 'calc(100% - 175px)', width: '145px', height: '48px', borderRadius: '50px' },
+                text: { top: 'calc(100% - 240px)', left: 'calc(100% - 420px)' }, // 將文字框移到按鈕左上方
+                content: `<h3>步驟 5：開始模擬</h3><p>恭喜您！完成資訊導覽後，請點擊右下角的「下一頁」按鈕，進入乾旱風險情境模擬挑戰！</p>`
+            }
+        ];
+
+        let currentStep = -1;
+
+        function showStep(stepIndex) {
+            if (stepIndex >= tutorialSteps.length) {
+                endTutorial();
+                return;
+            }
+
+            const step = tutorialSteps[stepIndex];
+            
+            tutorialHighlight.style.top = step.highlight.top;
+            tutorialHighlight.style.left = step.highlight.left;
+            tutorialHighlight.style.width = step.highlight.width;
+            tutorialHighlight.style.height = step.highlight.height;
+            tutorialHighlight.style.borderRadius = step.highlight.borderRadius;
+            
+            tutorialText.style.top = step.text.top;
+            tutorialText.style.left = step.text.left;
+            let smallText = stepIndex < tutorialSteps.length - 1 ? '<small>點擊畫面任意處繼續...</small>' : '<small>教學結束！請點擊右下角按鈕開始模擬。</small>';
+            tutorialText.innerHTML = `${step.content}${smallText}`;
+        }
+        
+        function startTutorial() {
+            homeScreen.classList.remove('active');
+            iframeScreen.classList.add('active');
+            
+            setTimeout(() => {
+                tutorialOverlay.classList.add('active');
+                currentStep = 0;
+                showStep(currentStep);
+            }, 500);
+        }
+
+        function endTutorial() {
+            tutorialOverlay.classList.remove('active');
+        }
+
+        startBtn.addEventListener('click', startTutorial);
+
+        tutorialOverlay.addEventListener('click', () => {
+            currentStep++;
+            showStep(currentStep);
+});
+    </script>
+
+</body>
+</html>
