@@ -60,13 +60,22 @@
         }
         .start-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 25px rgba(91, 192, 190, 0.5); }
         
-        #iframe-screen { background-color: #f0f2f5; }
-        #fhy-iframe { width: 100%; height: 100%; border: none; }
+        /* 修改：教學引導的背景畫面 */
+        #tutorial-screen {
+            background-color: #f0f2f5;
+        }
+        #tutorial-bg-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* 確保UI完整顯示 */
+            transition: opacity 0.3s ease; /* 新增淡入淡出效果 */
+        }
+        
         .next-page-button {
             position: fixed; bottom: 30px; right: 30px; background-color: #e67e22; color: white;
             padding: 12px 25px; border-radius: 50px; text-decoration: none; font-size: 1.1rem;
             font-weight: 500; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); transition: all 0.3s ease;
-            z-index: 1000;
+            z-index: 1000; /* 確保按鈕在教學背景之上 */
         }
         .next-page-button:hover { background-color: #d35400; transform: scale(1.05); }
 
@@ -90,8 +99,8 @@
 
         #tutorial-highlight {
             position: absolute;
-            border: 3px solid #5bc0be;
-            border-radius: 50px; /* 配合按鈕的圓角 */
+            border: 3px solid #e74c3c; /* 改為紅色以匹配您的範例 */
+            border-radius: 8px; /* 預設方角 */
             box-shadow: 0 0 0 9999px rgba(11, 19, 43, 0.85);
             transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -102,7 +111,6 @@
             color: #ecf0f1;
             padding: 20px 25px;
             border-radius: 10px;
-            max-width: 350px;
             border: 1px solid #7f8c8d;
             box-shadow: 0 5px 20px rgba(0,0,0,0.4);
             transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
@@ -128,7 +136,7 @@
             .logo { width: 140px; height: 140px; }
             .start-button { padding: 12px 30px; font-size: 1rem;}
             .next-page-button { bottom: 20px; right: 20px; padding: 10px 20px; font-size: 1rem;}
-            #tutorial-text { max-width: 80%; font-size: 1rem; padding: 15px 20px;}
+            #tutorial-text { font-size: 1rem; padding: 15px 20px;}
             #tutorial-text h3 { font-size: 1.2rem; }
         }
     </style>
@@ -147,8 +155,9 @@
         <button id="start-btn" class="start-button">開始挑戰</button>
     </div>
 
-    <div id="iframe-screen" class="screen">
-        <iframe id="fhy-iframe" src="https://fhy.wra.gov.tw/fhyv2/#" title="經濟部水利署-水利防災資訊網"></iframe>
+    <!-- 教學引導畫面 -->
+    <div id="tutorial-screen" class="screen">
+        <img id="tutorial-bg-img" src="" alt="防災資訊網教學背景">
         <a href="drought_simulator.html" class="next-page-button">下一頁 &raquo;</a>
     </div>
 
@@ -175,42 +184,50 @@
         // --- 頁面切換與教學引導邏輯 ---
         const startBtn = document.getElementById('start-btn');
         const homeScreen = document.getElementById('home-screen');
-        const iframeScreen = document.getElementById('iframe-screen');
+        const tutorialScreen = document.getElementById('tutorial-screen');
+        const tutorialBgImg = document.getElementById('tutorial-bg-img'); // 新增對背景圖的引用
         const tutorialOverlay = document.getElementById('tutorial-overlay');
         const tutorialHighlight = document.getElementById('tutorial-highlight');
         const tutorialText = document.getElementById('tutorial-text');
 
-        // *** 更新：修正步驟五文字框位置 ***
+        // *** 核心修改：教學步驟陣列，新增 background 屬性並更新座標 ***
+        // 請確認您的圖片檔名與此處設定相符
         const tutorialSteps = [
-            { // 步驟一: 查看水情
-                highlight: { top: '13.5%', left: '2.5%', width: '95%', height: '83%', borderRadius: '8px' },
-                text: { top: '15%', left: '70%'},
-                content: `<h3>步驟 1：查看水情</h3><p>此區塊為核心水情儀表板。您可以從左側面板的下拉選單，或直接點擊右側地圖上的縣市，來查看該區域的即時水情。</p>`
+            {
+                background: 'page1.jpg',
+                highlight: { top: '25.0%', left: '15.9%', width: '7.6%', height: '6.2%', borderRadius: '8px' },
+                text: { top: '35%', left: '18%', maxWidth: '350px', maxHeight: 'auto' },
+                content: `<h3>步驟 1：選擇縣市</h3><p>首先，從這裡的下拉選單中，選擇您想查詢水情的縣市。</p>`
             },
-            { // 步驟二: 防災快訊
-                highlight: { top: '5.2%', left: '41.4%', width: '10.2%', height: '5.5%', borderRadius: '8px' },
-                text: { top: '15%', left: '25%' },
+            {
+                background: 'page2.jpg',
+                highlight: { top: '8.7%', left: '59.2%', width: '10.3%', height: '34.1%', borderRadius: '8px' },
+                text: { top: '26.2%', left: '28.1%', maxWidth: '300px', maxHeight: 'auto' },
                 content: `<h3>步驟 2：防災快訊</h3><p>這裡是「防災快訊」區，點擊可查看重要的警示資訊，如水庫放水、高溫警報或停水通知。</p>`
             },
-            { // 步驟三: 警戒資訊
-                highlight: { top: '5.2%', left: '51.7%', width: '10.2%', height: '5.5%', borderRadius: '8px' },
-                text: { top: '15%', left: '65%' },
+            {
+                background: 'page3.jpg',
+                highlight: { top: '9.1%', left: '65.3%', width: '10.3%', height: '47.1%', borderRadius: '8px' },
+                text: { top: '26.2%', left: '34.1%', maxWidth: '300px', maxHeight: 'auto' },
                 content: `<h3>步驟 3：警戒資訊</h3><p>在「警戒資訊」中，您可以查詢全台灣各地的淹水、河川水位及水庫狀態的警戒等級。</p>`
             },
-            { // 步驟四: 監控資訊
-                highlight: { top: '5.2%', left: '62%', width: '10.2%', height: '5.5%', borderRadius: '8px' },
-                text: { top: '15%', left: '40%' },
+            {
+                background: 'page4.jpg',
+                highlight: { top: '9.4%', left: '71.7%', width: '9.5%', height: '42.8%', borderRadius: '8px' },
+                text: { top: '26.2%', left: '38%', maxWidth: '330px', maxHeight: 'auto' },
                 content: `<h3>步驟 4：監控資訊</h3><p>「監控資訊」是關鍵！這裡提供詳細的水庫水情視覺化圖表、即時資訊與歷史數據比對分析。</p>`
             },
-            { // 步驟五: 下一頁按鈕 (修正後的位置)
+            {
+                background: 'page5.jpg',
                 highlight: { top: 'calc(100% - 78px)', left: 'calc(100% - 175px)', width: '145px', height: '48px', borderRadius: '50px' },
-                text: { top: 'calc(100% - 240px)', left: 'calc(100% - 420px)' }, // 將文字框移到按鈕左上方
+                text: { top: '60%', left: '53%', maxWidth: '350px', maxHeight: 'auto' },
                 content: `<h3>步驟 5：開始模擬</h3><p>恭喜您！完成資訊導覽後，請點擊右下角的「下一頁」按鈕，進入乾旱風險情境模擬挑戰！</p>`
             }
         ];
 
         let currentStep = -1;
 
+        // *** 核心修改：showStep 函數現在會更換背景圖片 ***
         function showStep(stepIndex) {
             if (stepIndex >= tutorialSteps.length) {
                 endTutorial();
@@ -219,27 +236,38 @@
 
             const step = tutorialSteps[stepIndex];
             
+            // 更換背景圖 (帶有淡入淡出效果)
+            tutorialBgImg.style.opacity = 0; // 先淡出
+            setTimeout(() => {
+                tutorialBgImg.src = step.background;
+                tutorialBgImg.style.opacity = 1; // 再淡入
+            }, 300); // 等待淡出動畫完成
+
+            // 更新標示框位置與樣式
             tutorialHighlight.style.top = step.highlight.top;
             tutorialHighlight.style.left = step.highlight.left;
             tutorialHighlight.style.width = step.highlight.width;
             tutorialHighlight.style.height = step.highlight.height;
             tutorialHighlight.style.borderRadius = step.highlight.borderRadius;
             
+            // 更新文字框位置與內容
             tutorialText.style.top = step.text.top;
             tutorialText.style.left = step.text.left;
+            tutorialText.style.maxWidth = step.text.maxWidth || 'auto';
+            tutorialText.style.maxHeight = step.text.maxHeight || 'auto';
             let smallText = stepIndex < tutorialSteps.length - 1 ? '<small>點擊畫面任意處繼續...</small>' : '<small>教學結束！請點擊右下角按鈕開始模擬。</small>';
             tutorialText.innerHTML = `${step.content}${smallText}`;
         }
         
         function startTutorial() {
             homeScreen.classList.remove('active');
-            iframeScreen.classList.add('active');
+            tutorialScreen.classList.add('active');
             
             setTimeout(() => {
                 tutorialOverlay.classList.add('active');
                 currentStep = 0;
                 showStep(currentStep);
-            }, 500);
+            }, 500); // 等待畫面切換動畫完成
         }
 
         function endTutorial() {
@@ -248,10 +276,23 @@
 
         startBtn.addEventListener('click', startTutorial);
 
+        // --- 座標獲取輔助工具 --- 
+        tutorialOverlay.addEventListener('mousedown', function(e) {
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const xPercent = (x / window.innerWidth * 100).toFixed(1);
+            const yPercent = (y / window.innerHeight * 100).toFixed(1);
+
+            console.log(`點擊座標: { top: '${yPercent}%', left: '${xPercent}%' }`);
+        });
+        // --- 輔助工具結束 ---
+
         tutorialOverlay.addEventListener('click', () => {
             currentStep++;
             showStep(currentStep);
-});
+        });
     </script>
 
 </body>
