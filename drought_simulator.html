@@ -63,7 +63,7 @@
             margin-bottom: 10px;
             font-size: 1.4em;
         }
-                p {
+        p {
             margin-bottom: 12px;
             font-size: 22px; /* 放大字體 */
         }
@@ -121,7 +121,7 @@
         }
 
         /* 情境挑戰區域 */
-        #question-area {
+        #question-area, #suggestion-screen {
             background-color: #4a6270;
             padding: 15px;
             border-radius: 8px;
@@ -131,16 +131,21 @@
             flex-direction: column;
             flex-grow: 1;
             min-height: 0;
+            position: relative; /* 添加定位，以便絕對定位「下一題」按鈕 */
         }
-        .question-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+
+        /* 通用的 header content 樣式，用於情境標題和下一題按鈕 */
+        .header-content {
+            display: flex; /* 使用 Flexbox 讓 h3 和按鈕在同一行 */
+            justify-content: space-between; /* 將內容和按鈕推向兩端 */
+            align-items: center; /* 垂直居中對齊 */
             margin-bottom: 10px;
         }
-        #question-area h3 {
-            margin-bottom: 0;
+        .header-content h3 {
+            margin-bottom: 0; /* 在 Flexbox 中，移除 h3 的底部間距 */
         }
+
+        /* 「下一題」按鈕的通用樣式 */
         .next-question-button {
             background-color: #e67e22;
             color: white;
@@ -151,7 +156,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.1s ease;
-            display: none;
+            display: none; /* 預設隱藏，由 JavaScript 控制顯示 */
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         .next-question-button:hover {
@@ -161,6 +166,21 @@
         .next-question-button:active {
             transform: translateY(0);
         }
+
+        /* 大螢幕下「下一題」按鈕的絕對定位 */
+        @media (min-width: 769px) {
+            #question-area #next-question-btn,
+            #suggestion-screen #suggestion-next-btn { /* 同時選中兩個按鈕 */
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                z-index: 10;
+            }
+            /* 由於按鈕是絕對定位，可能需要調整 padding 以避免內容與按鈕重疊 */
+            #question-area { padding-top: 45px; } /* 為絕對定位的按鈕騰出空間 */
+            #suggestion-screen { padding-top: 45px; } /* 為絕對定位的按鈕騰出空間 */
+        }
+
         #question-area p {
             font-size: 1.5em; 
             margin-top: 0px;
@@ -364,6 +384,10 @@
         }
 
         /* 第 11 題 - 意見提交樣式 */
+        #suggestion-screen {
+            flex-direction: column;
+            gap: 15px;
+        }
         #suggestion-textarea {
             width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #55798c;
             background-color: #2c3e50; color: #ecf0f1; font-size: 1em;
@@ -372,8 +396,18 @@
         #suggestion-textarea:focus { outline: none; border-color: #3498db; }
         #submit-suggestion-btn { background-color: #9b59b6; }
         #submit-suggestion-btn:hover { background-color: #8e44ad; }
+        #suggestion-screen p.suggestion-note {
+            font-size: 1em; 
+            color: #f1c40f; 
+            margin-bottom: 5px;
+            margin-top: 0; /* 確保沒有多餘的頂部間距 */
+        }
 
         /* 第 12 題 - 投票畫面樣式 */
+        #voting-screen {
+            flex-direction: column;
+            gap: 15px;
+        }
         #voting-options-container { display: flex; flex-direction: column; gap: 10px; text-align: left; }
         .vote-option {
             display: flex; align-items: center; background-color: #4a6270; padding: 12px;
@@ -442,7 +476,6 @@
 
 
         /* Tally 問卷樣式 */
-                /* Tally 問卷樣式 */
         #tally-screen {
             position: fixed; /* 固定位置，覆蓋整個視窗 */
             top: 0;
@@ -464,6 +497,19 @@
             }
             #left-panel-container, #right-panel { width: 100%; flex: none; }
             h1 { font-size: 2.2em; } h2 { font-size: 1.5em; } h3 { font-size: 1.2em; }
+
+            /* RWD 下的「下一題」按鈕樣式 */
+            #question-area #next-question-btn,
+            #suggestion-screen #suggestion-next-btn {
+                position: static; /* 恢復靜態定位 */
+                margin-left: auto; /* 將按鈕推到 flex 容器的右側 */
+                margin-right: 0;
+                top: auto; /* 重設 top */
+                right: auto; /* 重設 right */
+            }
+            /* 重設 padding 以適應靜態按鈕 */
+            #question-area { padding-top: 15px; } 
+            #suggestion-screen { padding-top: 15px; } 
         }
     </style>
 </head>
@@ -488,7 +534,7 @@
             <div id="main-content-wrapper">
                 <div id="left-panel-container">
                     <div id="question-area">
-                        <div class="question-header">
+                        <div class="header-content"> <!-- 統一使用 header-content 來包含標題和按鈕 -->
                             <h3>情境挑戰：</h3>
                             <button id="next-question-btn" class="next-question-button">下一題 &rarr;</button>
                         </div>
@@ -514,10 +560,13 @@
                 </div>
             </div>
 
-            <div id="suggestion-screen" class="game-screen" style="display: none; flex-direction: column; gap: 15px;">
-                <h3>情境挑戰：分享您的節水妙方</h3>
+            <div id="suggestion-screen" class="game-screen" style="display: none;">
+                <div class="header-content"> <!-- 統一使用 header-content 來包含標題和按鈕 -->
+                    <h3>情境挑戰：分享您的節水妙方</h3>
+                    <button id="suggestion-next-btn" class="next-question-button">下一題 &rarr;</button>
+                </div>
                 <p>除了遊戲中提到的方法，您還有什麼獨特的節水政策或家庭節水小撇步嗎？</p>
-                <p>請分享您的建議，讓它有機會被大家看見！</p>
+                <p class="suggestion-note">（若無建議，可直接點擊上方「下一題」按鈕）</p>
                 <textarea id="suggestion-textarea" placeholder="例如：用洗米水澆花，或是改造馬桶水箱..." rows="4"></textarea>
                 <button id="submit-suggestion-btn" class="choice-button" style="text-align: center;">提交我的建議</button>
             </div>
@@ -591,6 +640,8 @@
         const submitSuggestionBtn = document.getElementById('submit-suggestion-btn');
         const votingOptionsContainer = document.getElementById('voting-options-container');
         const votingFeedback = document.getElementById('voting-feedback');
+        // 更新：將 skip-suggestion-btn 改為 suggestion-next-btn
+        const suggestionNextBtn = document.getElementById('suggestion-next-btn');
 
         // --- 遊戲狀態變數 ---
         let currentWeek = 0;
@@ -719,7 +770,7 @@
             feedbackArea.textContent = '請選擇您的用水行為...';
             feedbackArea.className = 'feedback-area info';
             knowledgeCard.classList.remove('visible');
-            nextQuestionBtn.style.display = 'none';
+            nextQuestionBtn.style.display = 'none'; // 隱藏主遊戲區的下一題按鈕
             initializeBehaviorsList();
         }
 
@@ -772,10 +823,11 @@
                 const targetScreen = document.getElementById(scenario.screenId);
                 targetScreen.style.display = 'flex';
                 
-                if (week === 12) {
+                if (week === 12) { // 當前是第12題，即建議提交畫面
                     suggestionTextarea.value = '';
                     submitSuggestionBtn.disabled = false;
-                } else if (week === 13) {
+                    suggestionNextBtn.style.display = 'block'; // 確保第12題的下一題按鈕顯示
+                } else if (week === 13) { // 當前是第13題，即投票畫面
                     prepareVotingOptions();
                 }
             } else {
@@ -818,14 +870,20 @@
                 knowledgeCard.classList.remove('visible');
             }
             document.querySelectorAll('#choices-container .choice-button').forEach(btn => btn.disabled = true);
-            nextQuestionBtn.style.display = 'block';
+            nextQuestionBtn.style.display = 'block'; // 顯示主遊戲區的下一題按鈕
         }
         
         function proceedToNextQuestion() {
             feedbackArea.textContent = '請選擇您的用水行為...';
             feedbackArea.className = 'feedback-area info';
             knowledgeCard.classList.remove('visible');
-            nextQuestionBtn.style.display = 'none';
+            nextQuestionBtn.style.display = 'none'; // 隱藏主遊戲區的下一題按鈕
+
+            // 隱藏第12題的下一題按鈕
+            if (currentWeek === 12 && suggestionNextBtn) {
+                suggestionNextBtn.style.display = 'none';
+            }
+
 
             document.querySelectorAll('#learned-behaviors-list li.highlight').forEach(item => {
                 item.classList.remove('highlight');
@@ -934,6 +992,7 @@
                 savedBehaviors.add("分享節水建議");
                 addNewBehaviorToList("分享節水建議");
             }
+            // 無論是否有提交建議，都進入下一題
             proceedToNextQuestion();
         }
 
@@ -1002,6 +1061,8 @@
         showTallyBtn.addEventListener('click', showTallyForm);
         nextQuestionBtn.addEventListener('click', proceedToNextQuestion);
         submitSuggestionBtn.addEventListener('click', handleSubmitSuggestion);
+        // 更新：監聽 suggestion-next-btn
+        suggestionNextBtn.addEventListener('click', proceedToNextQuestion);
 
         // 頁面載入時的初始設定
         updateUI();

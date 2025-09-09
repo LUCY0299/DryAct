@@ -61,7 +61,8 @@
         .start-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 25px rgba(91, 192, 190, 0.5); }
         
         #tutorial-screen {
-            background-color: #f0f2f5;
+            /* Keep original background-color for non-iframe steps */
+            background-color: #f0f2f5; 
         }
         #tutorial-bg-img {
             width: 100%;
@@ -149,6 +150,23 @@
 </head>
 <body>
 
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(11, 19, 43, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; text-align: left; color: #ecf0f1; padding: 20px; box-sizing: border-box;" id="welcome-statement">
+        <div style="max-width: 800px; background-color: #1c2541; padding: 30px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); border: 1px solid #3a506b;">
+            <h2 style="color: #5bc0be; font-size: 1.8em; margin-top: 0; text-align: center;">歡迎參與「數位平台設計對乾旱風險感知」學術研究</h2>
+            <p style="font-size: 1.1em; line-height: 1.7;">您好！感謝您撥冗參與本次研究。本研究旨在探討數位共創平台的設計（如資訊呈現、互動方式）如何影響使用者對於乾旱風險的感知、對相關政策的認同，以及調高水費來因應乾旱的意願。</p>
+            <p style="font-size: 1.1em; line-height: 1.7;">在接下來的體驗中，您將會依序完成以下三個環節：</p>
+            <ol style="font-size: 1.1em; line-height: 1.8; padding-left: 25px;">
+                <li><strong>前導教學：</strong>首先，我們會引導您熟悉水利署防災資訊網的操作，學習如何查詢即時的水庫水情資訊。</li>
+                <li><strong>情境模擬挑戰：</strong>接著，您將進入一個「乾旱風險情境模擬器」。在此互動遊戲中，您的每個決策都將影響虛擬社區的水庫存量與您的節水積分。</li>
+                <li><strong>研究問卷填寫：</strong>完成模擬挑戰後，系統將引導您填寫一份學術問卷，以收集您對於本次體驗的回饋與看法。</li>
+            </ol>
+            <p style="font-size: 1.1em; line-height: 1.7;">本問卷採匿名方式進行，所有資料僅供學術分析之用，請您放心填答。您的寶貴意見將是本研究成功的關鍵，並有助於未來開發更有效的數位溝通平台。</p>
+            <div style="text-align: center; margin-top: 25px;">
+                <button onclick="document.getElementById('welcome-statement').style.display='none';" style="background-color: #e67e22; color: white; border: none; padding: 12px 30px; font-size: 1.1em; font-weight: 700; border-radius: 50px; cursor: pointer; transition: all 0.3s ease;">我已了解，開始體驗</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 背景層 -->
     <div class="background-gradient"></div>
     <canvas id="particle-canvas"></canvas>
@@ -156,7 +174,7 @@
     <!-- 內容層 -->
     <div id="home-screen" class="screen active">
         <img src="dry-logo.png" alt="水資源 Logo" class="logo">
-        <h1>水資源永續挑戰</h1>
+        <h1>第一階段：水資源永續挑戰</h1>
         <p class="subtitle">了解水情，學習節水，應對未來的乾旱風險</p>
         <button id="start-btn" class="start-button">開始挑戰</button>
     </div>
@@ -164,7 +182,8 @@
     <!-- 教學引導畫面 -->
     <div id="tutorial-screen" class="screen">
         <img id="tutorial-bg-img" src="" alt="防災資訊網教學背景">
-        <iframe id="external-site-iframe" style="width:100%; height:100%; border:none; display:none; position:absolute; top:0; left:0; z-index: 5;"></iframe>
+        <!-- 移除 iframe 的 display:none 樣式，透過 JS 控制 -->
+        <iframe id="external-site-iframe" style="width:100%; height:100%; border:none; position:absolute; top:0; left:0; z-index: 5;"></iframe>
         <a href="drought_simulator.html" class="next-page-button">下一頁 &raquo;</a>
     </div>
 
@@ -220,23 +239,23 @@
             },
             {
                 useIframe: true,
-                highlight: { top: '8.4%', left: '72.7%', width: '6%', height: '5%', borderRadius: '8px' },
-                text: { top: '18%', left: '55%', maxWidth: '300px' },
-                content: `<h3>步驟 4-1：即時監控</h3><p>網站已載入！請<span class="text-highlight">雙擊</span>高亮處的「<b>監控資訊</b>」，來查看即時數據選單。</p>`,
+                highlight: { top: '8.9%', left: '72.7%', width: '7%', height: '5%', borderRadius: '8px' },
+                text: { top: '18%', left: '55%', maxWidth: '450px' },
+                content: `<h3>步驟 4-1：請觀察監控資訊</h3><p>請<span class="text-highlight">雙擊</span>高亮處的「<b>監控資訊</b>」</p>`,
                 isInteractive: true 
             },
             {
                 useIframe: true,
-                highlight: { top: '30.9%', left: '73.5%', width: '9%', height: '5.5%', borderRadius: '8px' },
-                text: { top: '30%', left: '50%', maxWidth: '300px' },
-                content: `<h3>步驟 4-2：選擇項目</h3><p>做得好！現在請從選單中點擊「<b>水庫水情</b>」，進入詳細頁面。</p>`,
+                highlight: { top: '30.9%', left: '73.5%', width: '10%', height: '6%', borderRadius: '8px' },
+                text: { top: '30%', left: '35%', maxWidth: '500px' },
+                content: `<h3>步驟 4-2：選擇項目</h3><p>做得好！現在請從選單中<span class="text-highlight">點擊</span>「<b>水庫水情</b>」 <br>⭐請留意：之後的問卷將詢問 <span class="text-highlight">石門水庫的有效蓄水量</span>，請您稍後在相關頁面中觀察並記下</p>`,
                 isInteractive: true 
             },
             {
                 useIframe: true,
                 highlight: { top: 'calc(100% - 76px)', left: 'calc(100% - 165px)', width: '145px', height: '48px', borderRadius: '50px' },
                 text: { top: '60%', left: '53%', maxWidth: '350px' },
-                content: `<h3>教學結束</h3><p>您已學會如何查找即時水情！點擊畫面任意處，然後點擊右下角的「下一頁」按鈕開始模擬挑戰。</p>`,
+                content: `<h3>教學結束</h3><p>您已學會如何查找即時水情！點擊畫面任意處，然後點擊右下角的「下一頁」按鈕開始下一階段情境挑戰遊戲。</p>`,
                 isInteractive: false
             }
         ];
@@ -252,20 +271,13 @@
             const step = tutorialSteps[stepIndex];
             
             if (step.useIframe) {
+                // 如果是 iframe 步驟，顯示 iframe 並隱藏背景圖片
                 tutorialBgImg.style.display = 'none';
-                externalSiteIframe.style.display = 'block';
-                if (!externalSiteIframe.src) {
-                    tutorialText.innerHTML = `<h3>正在載入即時資訊網站...</h3>`;
-                    tutorialHighlight.style.width = '0px';
-                    externalSiteIframe.src = 'https://fhy.wra.gov.tw/fhyv2/';
-                    externalSiteIframe.onload = () => {
-                        showStepContent(step);
-                    };
-                    return;
-                }
+                externalSiteIframe.style.display = 'block'; // 顯示 iframe
             } else {
+                // 如果是圖片步驟，顯示背景圖片並隱藏 iframe
+                externalSiteIframe.style.display = 'none'; // 隱藏 iframe
                 tutorialBgImg.style.display = 'block';
-                externalSiteIframe.style.display = 'none';
                 tutorialBgImg.style.opacity = 0;
                 setTimeout(() => {
                     tutorialBgImg.src = step.background;
@@ -296,6 +308,8 @@
             tutorialText.innerHTML = `${step.content}${smallText}`;
 
             tutorialOverlay.style.pointerEvents = step.isInteractive ? 'none' : 'auto';
+            // 讓 tutorialHighlight 在步驟 4-1 時能夠接收 dblclick 事件，同時避免 click 事件
+            // 對於其他 interactive 步驟，仍然響應 click
             tutorialHighlight.style.pointerEvents = step.isInteractive ? 'auto' : 'none';
         }
         
@@ -303,6 +317,10 @@
             homeScreen.classList.remove('active');
             tutorialScreen.classList.add('active');
             
+            // 在教學開始時就預先載入 iframe 的內容，使其在背景開始載入
+            externalSiteIframe.src = 'https://fhy.wra.gov.tw/fhyv2/';
+            // 初始時 iframe 仍為隱藏 (display: none)，直到需要顯示時才切換
+
             setTimeout(() => {
                 tutorialOverlay.classList.add('active');
                 currentStep = 0;
@@ -325,14 +343,29 @@
             }
         });
 
+        // 監聽單擊事件：如果當前步驟是 4-1 (currentStep === 3)，則不執行任何操作
         tutorialHighlight.addEventListener('click', (e) => {
             if (currentStep > -1 && tutorialSteps[currentStep].isInteractive) {
+                if (currentStep === 3) { // 步驟 4-1 需要雙擊
+                    e.stopPropagation();
+                    return; // 阻止單擊在此步驟時跳轉
+                }
                 e.stopPropagation();
                 currentStep++;
                 showStep(currentStep);
             }
         });
 
+        // 監聽雙擊事件：如果當前步驟是 4-1 (currentStep === 3)，則執行跳轉
+        tutorialHighlight.addEventListener('dblclick', (e) => {
+            if (currentStep === 3) { // 僅在步驟 4-1 時響應雙擊
+                e.stopPropagation();
+                currentStep++;
+                showStep(currentStep);
+            }
+        });
+
+        // 僅用於開發時獲取點擊座標，正式環境可移除
         document.body.addEventListener('mousedown', function(e) {
             if (!e.target.closest('#tutorial-overlay')) {
                 const xPercent = (e.clientX / window.innerWidth * 100).toFixed(1);
