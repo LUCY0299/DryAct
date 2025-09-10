@@ -238,18 +238,18 @@
                 content: `<h3>步驟 3：警戒資訊</h3><p>在「警戒資訊」中，您可以查詢各種警戒等級。接下來，我們將載入真實網站進行互動教學。</p>`
             },
             {
-                useIframe: true,
-                highlight: { top: '8.9%', left: '72.7%', width: '7%', height: '5%', borderRadius: '8px' },
-                text: { top: '18%', left: '55%', maxWidth: '450px' },
-                content: `<h3>步驟 4-1：請觀察監控資訊</h3><p>請<span class="text-highlight">雙擊</span>高亮處的「<b>監控資訊</b>」</p>`,
-                isInteractive: true 
+                background: 'page4.jpg',
+                highlight: { top: '6.9%', left: '70.7%', width: '7%', height: '5%', borderRadius: '8px' },
+                text: { top: '18%', left: '50%', maxWidth: '450px' },
+                content: `<h3>步驟 4-1：請觀察監控資訊</h3><p>步驟一：請<span class="text-highlight">點擊</span>高亮處的「<b>監控資訊</b>」</p>`,
+                isInteractive: true
             },
             {
-                useIframe: true,
-                highlight: { top: '30.9%', left: '73.5%', width: '10%', height: '6%', borderRadius: '8px' },
+                background: 'page4.jpg',
+                highlight: { top: '28.9%', left: '71.5%', width: '10%', height: '6%', borderRadius: '8px' },
                 text: { top: '30%', left: '35%', maxWidth: '500px' },
-                content: `<h3>步驟 4-2：選擇項目</h3><p>做得好！現在請從選單中<span class="text-highlight">點擊</span>「<b>水庫水情</b>」 <br>⭐請留意：之後的問卷將詢問 <span class="text-highlight">石門水庫的有效蓄水量</span>，請您稍後在相關頁面中觀察並記下</p>`,
-                isInteractive: true 
+                content: `<h3>步驟 4-2：選擇項目</h3><p>步驟二：請從選單中<span class="text-highlight">點擊</span>「<b>水庫水情</b>」 <br>⭐請留意：之後的問卷將詢問 <span class="text-highlight">石門水庫的有效蓄水量</span>，請您稍後在相關頁面中觀察並記下</p>`,
+                isInteractive: true
             },
             {
                 useIframe: true,
@@ -262,69 +262,113 @@
 
         let currentStep = -1;
 
+        function updateStepDisplay() {
+            if (currentStep < 0 || currentStep >= tutorialSteps.length) return;
+            const step = tutorialSteps[currentStep];
+
+            let smallText = '';
+            if (!step.isInteractive) {
+                smallText = step.content.includes("教學結束")
+                    ? '<small>請點擊右下角按鈕開始模擬。</small>'
+                    : '<small>點擊畫面任意處繼續...</small>';
+            }
+            tutorialText.innerHTML = `${step.content}${smallText}`;
+            tutorialText.style.maxWidth = step.text.maxWidth || 'auto';
+
+            const positioner = (imgWidth, imgHeight) => {
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const viewportRatio = viewportWidth / viewportHeight;
+                const imageRatio = imgWidth / imgHeight;
+
+                let renderedWidth, renderedHeight, offsetX, offsetY;
+
+                if (imageRatio > viewportRatio) { // Image is wider than viewport, letterboxed
+                    renderedWidth = viewportWidth;
+                    renderedHeight = renderedWidth / imageRatio;
+                    offsetX = 0;
+                    offsetY = (viewportHeight - renderedHeight) / 2;
+                } else { // Image is taller than viewport, pillarboxed
+                    renderedHeight = viewportHeight;
+                    renderedWidth = renderedHeight * imageRatio;
+                    offsetY = 0;
+                    offsetX = (viewportWidth - renderedWidth) / 2;
+                }
+
+                // Calculate and apply styles in pixels for highlight
+                const h = step.highlight;
+                tutorialHighlight.style.top = `${offsetY + (parseFloat(h.top) / 100) * renderedHeight}px`;
+                tutorialHighlight.style.left = `${offsetX + (parseFloat(h.left) / 100) * renderedWidth}px`;
+                tutorialHighlight.style.width = `${(parseFloat(h.width) / 100) * renderedWidth}px`;
+                tutorialHighlight.style.height = `${(parseFloat(h.height) / 100) * renderedHeight}px`;
+                tutorialHighlight.style.borderRadius = h.borderRadius;
+
+                // Calculate and apply styles in pixels for text
+                const t = step.text;
+                tutorialText.style.top = `${offsetY + (parseFloat(t.top) / 100) * renderedHeight}px`;
+                tutorialText.style.left = `${offsetX + (parseFloat(t.left) / 100) * renderedWidth}px`;
+            };
+
+            if (step.useIframe) {
+                // For the last step, which uses calc() and px, keep original behavior as it's viewport-relative
+                if (step.highlight.top.includes('calc')) {
+                    Object.assign(tutorialHighlight.style, step.highlight);
+                    tutorialText.style.top = step.text.top;
+                    tutorialText.style.left = step.text.left;
+                } else {
+                    // For other iframe steps, assume a 16:9 aspect ratio for the embedded site
+                    // as we can't know its real dimensions. This is a heuristic.
+                    positioner(1920, 1080);
+                }
+            } else {
+                // For image-based steps, use the image's natural dimensions for accurate positioning
+                const img = new Image();
+                img.onload = function() {
+                    positioner(this.width, this.height);
+                };
+                img.src = step.background;
+            }
+        }
+
         function showStep(stepIndex) {
             if (stepIndex >= tutorialSteps.length) {
                 endTutorial();
                 return;
             }
+            currentStep = stepIndex;
+            const step = tutorialSteps[currentStep];
 
-            const step = tutorialSteps[stepIndex];
-            
             if (step.useIframe) {
-                // 如果是 iframe 步驟，顯示 iframe 並隱藏背景圖片
                 tutorialBgImg.style.display = 'none';
-                externalSiteIframe.style.display = 'block'; // 顯示 iframe
+                externalSiteIframe.style.display = 'block';
             } else {
-                // 如果是圖片步驟，顯示背景圖片並隱藏 iframe
-                externalSiteIframe.style.display = 'none'; // 隱藏 iframe
+                externalSiteIframe.style.display = 'none';
                 tutorialBgImg.style.display = 'block';
-                tutorialBgImg.style.opacity = 0;
-                setTimeout(() => {
-                    tutorialBgImg.src = step.background;
-                    tutorialBgImg.style.opacity = 1;
-                }, 300);
+                const newSrc = new URL(step.background, window.location.href).href;
+                if (tutorialBgImg.src !== newSrc) {
+                    tutorialBgImg.style.opacity = 0;
+                    setTimeout(() => {
+                        tutorialBgImg.src = step.background;
+                        tutorialBgImg.style.opacity = 1;
+                    }, 300);
+                }
             }
-            
-            showStepContent(step);
-        }
 
-        function showStepContent(step) {
-            tutorialHighlight.style.top = step.highlight.top;
-            tutorialHighlight.style.left = step.highlight.left;
-            tutorialHighlight.style.width = step.highlight.width;
-            tutorialHighlight.style.height = step.highlight.height;
-            tutorialHighlight.style.borderRadius = step.highlight.borderRadius;
-            
-            tutorialText.style.top = step.text.top;
-            tutorialText.style.left = step.text.left;
-            tutorialText.style.maxWidth = step.text.maxWidth || 'auto';
-            
-            let smallText = '';
-            if (!step.isInteractive) {
-                smallText = step.content.includes("教學結束") 
-                    ? '<small>請點擊右下角按鈕開始模擬。</small>' 
-                    : '<small>點擊畫面任意處繼續...</small>';
-            }
-            tutorialText.innerHTML = `${step.content}${smallText}`;
+            updateStepDisplay();
 
             tutorialOverlay.style.pointerEvents = step.isInteractive ? 'none' : 'auto';
-            // 讓 tutorialHighlight 在步驟 4-1 時能夠接收 dblclick 事件，同時避免 click 事件
-            // 對於其他 interactive 步驟，仍然響應 click
             tutorialHighlight.style.pointerEvents = step.isInteractive ? 'auto' : 'none';
         }
-        
+
         function startTutorial() {
             homeScreen.classList.remove('active');
             tutorialScreen.classList.add('active');
-            
-            // 在教學開始時就預先載入 iframe 的內容，使其在背景開始載入
+
             externalSiteIframe.src = 'https://fhy.wra.gov.tw/fhyv2/';
-            // 初始時 iframe 仍為隱藏 (display: none)，直到需要顯示時才切換
 
             setTimeout(() => {
                 tutorialOverlay.classList.add('active');
-                currentStep = 0;
-                showStep(currentStep);
+                showStep(0);
             }, 500);
         }
 
@@ -338,38 +382,37 @@
 
         tutorialOverlay.addEventListener('click', () => {
             if (currentStep > -1 && !tutorialSteps[currentStep].isInteractive) {
-                currentStep++;
-                showStep(currentStep);
+                showStep(currentStep + 1);
             }
         });
 
-        // 監聽單擊事件：如果當前步驟是 4-1 (currentStep === 3)，則不執行任何操作
         tutorialHighlight.addEventListener('click', (e) => {
             if (currentStep > -1 && tutorialSteps[currentStep].isInteractive) {
-                if (currentStep === 3) { // 步驟 4-1 需要雙擊
-                    e.stopPropagation();
-                    return; // 阻止單擊在此步驟時跳轉
-                }
                 e.stopPropagation();
-                currentStep++;
-                showStep(currentStep);
+                showStep(currentStep + 1);
             }
         });
 
-        // 監聽雙擊事件：如果當前步驟是 4-1 (currentStep === 3)，則執行跳轉
         tutorialHighlight.addEventListener('dblclick', (e) => {
-            if (currentStep === 3) { // 僅在步驟 4-1 時響應雙擊
+            if (currentStep === 3) { // Only for Step 4-1
                 e.stopPropagation();
-                currentStep++;
-                showStep(currentStep);
+                // Action moved to single click
             }
         });
+
+        window.addEventListener('resize', updateStepDisplay);
 
         // 僅用於開發時獲取點擊座標，正式環境可移除
         document.body.addEventListener('mousedown', function(e) {
             if (!e.target.closest('#tutorial-overlay')) {
                 const xPercent = (e.clientX / window.innerWidth * 100).toFixed(1);
                 const yPercent = (e.clientY / window.innerHeight * 100).toFixed(1);
+                console.log(`點擊座標: { top: '${yPercent}%', left: '${xPercent}%' }`);
+            }
+        });
+    </script>
+</body>
+</html>ndow.innerHeight * 100).toFixed(1);
                 console.log(`點擊座標: { top: '${yPercent}%', left: '${xPercent}%' }`);
             }
         });
