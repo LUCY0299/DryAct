@@ -61,7 +61,6 @@
         .start-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 25px rgba(91, 192, 190, 0.5); }
         
         #tutorial-screen {
-            /* Keep original background-color for non-iframe steps */
             background-color: #f0f2f5; 
         }
         #tutorial-bg-img {
@@ -145,10 +144,76 @@
             .next-page-button { bottom: 20px; right: 20px; padding: 10px 20px; font-size: 1rem;}
             #tutorial-text { font-size: 1rem; padding: 15px 20px;}
             #tutorial-text h3 { font-size: 1.2rem; }
+
+            #welcome-statement > div {
+                padding: 20px !important;
+            }
+            #welcome-statement h2 {
+                font-size: 1.5em !important;
+            }
+            #welcome-statement p, #welcome-statement ol {
+                font-size: 1em !important;
+                line-height: 1.6 !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            #welcome-statement {
+                padding: 25px !important;
+            }
+            #welcome-statement > div {
+                padding: 15px 10px !important;
+            }
+            #welcome-statement h2 {
+                font-size: 1.2em !important;
+            }
+            #welcome-statement p, #welcome-statement ol {
+                font-size: 0.85em !important;
+            }
+            #welcome-statement ol {
+                padding-left: 20px !important;
+            }
+            #welcome-statement button {
+                padding: 10px 20px !important;
+                font-size: 0.9em !important;
+            }
+            #tutorial-text { font-size: 0.9rem; padding: 10px 15px; }
+            #tutorial-text h3 { font-size: 0.8rem; }
+        }
+
+        #rotate-prompt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(11, 19, 43, 0.98);
+            color: white;
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 1.2rem;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 1024px) and (orientation: portrait) {
+            body.tutorial-active #rotate-prompt-overlay {
+                display: flex;
+            }
         }
     </style>
 </head>
 <body>
+
+    <div id="rotate-prompt-overlay">
+        <p>為了獲得最佳體驗，請將您的裝置轉為橫向模式。</p>
+    </div>
 
     <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(11, 19, 43, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; text-align: left; color: #ecf0f1; padding: 20px; box-sizing: border-box;" id="welcome-statement">
         <div style="max-width: 800px; background-color: #1c2541; padding: 30px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); border: 1px solid #3a506b;">
@@ -182,7 +247,6 @@
     <!-- 教學引導畫面 -->
     <div id="tutorial-screen" class="screen">
         <img id="tutorial-bg-img" src="" alt="防災資訊網教學背景">
-        <!-- 移除 iframe 的 display:none 樣式，透過 JS 控制 -->
         <iframe id="external-site-iframe" style="width:100%; height:100%; border:none; position:absolute; top:0; left:0; z-index: 5;"></iframe>
         <a href="drought_simulator.html" class="next-page-button">下一頁 &raquo;</a>
     </div>
@@ -204,7 +268,7 @@
         function init(){particlesArray=[];const t=(canvas.height*canvas.width)/9e3;for(let e=0;e<t;e++){const t=2*Math.random()+1,i=Math.random()*(innerWidth-2*t-2*t)+2*t,o=Math.random()*(innerHeight-2*t-2*t)+2*t,s=.4*Math.random()-.2,a=.4*Math.random()-.2;particlesArray.push(new Particle(i,o,s,a,t,"rgba(200, 210, 255, 0.8)"))}}
         function connect(){let t=1;for(let e=0;e<particlesArray.length;e++)for(let i=e;i<particlesArray.length;i++){const o=(particlesArray[e].x-particlesArray[i].x)*(particlesArray[e].x-particlesArray[i].x)+(particlesArray[e].y-particlesArray[i].y)*(particlesArray[e].y-particlesArray[i].y);o<canvas.width/7*(canvas.height/7)&&(t=1-o/2e4,ctx.strokeStyle=`rgba(180, 190, 255, ${t})`,ctx.lineWidth=1,ctx.beginPath(),ctx.moveTo(particlesArray[e].x,particlesArray[e].y),ctx.lineTo(particlesArray[i].x,particlesArray[i].y),ctx.stroke())}}
         function animate(){requestAnimationFrame(animate),ctx.clearRect(0,0,innerWidth,innerHeight);for(let t=0;t<particlesArray.length;t++)particlesArray[t].update();connect()}
-        window.addEventListener("resize",()=>{canvas.width=innerWidth,canvas.height=innerHeight,init()}),init(),animate();
+        window.addEventListener("resize",()=>{canvas.width=innerWidth,canvas.height=innerHeight,init(); updateStepDisplay(); }),init(),animate();
 
 
         // --- 頁面切換與教學引導邏輯 ---
@@ -218,117 +282,231 @@
         const tutorialText = document.getElementById('tutorial-text');
         const nextPageButton = document.querySelector('.next-page-button');
 
+        // ==================================================================
+        // ======================= ✅ 正確的物件結構 =======================
+        // ==================================================================
         const tutorialSteps = [
             {
                 background: 'page1.jpg',
                 highlight: { top: '25.0%', left: '15.9%', width: '7.6%', height: '6.2%', borderRadius: '8px' },
-                text: { top: '35%', left: '18%', maxWidth: '350px' },
-                content: `<h3>步驟 1：選擇縣市</h3><p>首先，從這裡的下拉選單中，選擇您想查詢水情的縣市。</p>`
+                text: {
+                    content: `<h3>步驟 1：選擇縣市</h3><p>首先，從這裡的下拉選單中，選擇您想查詢水情的縣市。</p>`,
+                    maxWidth: '350px'
+                },
+                textPosition: 'right',
+                textOffset: 20
             },
             {
                 background: 'page2.jpg',
                 highlight: { top: '8.7%', left: '59.2%', width: '10.3%', height: '28.1%', borderRadius: '8px' },
-                text: { top: '26.2%', left: '28.1%', maxWidth: '300px' },
-                content: `<h3>步驟 2：防災快訊</h3><p>這裡是「防災快訊」區，點擊可查看重要的警示資訊，如水庫放水、高溫警報或停水通知。</p>`
+                text: {
+                    content: `<h3>步驟 2：防災快訊</h3><p>這裡是「防災快訊」區，點擊可查看重要的警示資訊，如水庫放水、高溫警報或停水通知。</p>`,
+                    maxWidth: '300px'
+                },
+                textPosition: 'left'
             },
             {
                 background: 'page3.jpg',
                 highlight: { top: '9.1%', left: '65.3%', width: '10.3%', height: '47.1%', borderRadius: '8px' },
-                text: { top: '26.2%', left: '34.1%', maxWidth: '300px' },
-                content: `<h3>步驟 3：警戒資訊</h3><p>在「警戒資訊」中，您可以查詢各種警戒等級。接下來，我們將載入真實網站進行互動教學。</p>`
+                text: {
+                    content: `<h3>步驟 3：警戒資訊</h3><p>在「警戒資訊」中，您可以查詢各種警戒等級。接下來，我們將載入真實網站進行互動教學。</p>`,
+                    maxWidth: '300px'
+                },
+                textPosition: 'left'
             },
             {
                 background: 'page4.jpg',
                 highlight: { top: '6.9%', left: '70.7%', width: '7%', height: '5%', borderRadius: '8px' },
-                text: { top: '18%', left: '50%', maxWidth: '450px' },
-                content: `<h3>步驟 4-1：請觀察監控資訊</h3><p>步驟一：請<span class="text-highlight">點擊</span>高亮處的「<b>監控資訊</b>」</p>`,
-                isInteractive: true
+                text: {
+                    content: `<h3>步驟 4-1：請觀察監控資訊</h3><p>步驟一：請<span class="text-highlight">點擊</span>高亮處的「<b>監控資訊</b>」</p>`,
+                    maxWidth: '450px'
+                },
+                isInteractive: true,
+                textPosition: 'left'
             },
             {
                 background: 'page4.jpg',
                 highlight: { top: '28.9%', left: '71.5%', width: '10%', height: '6%', borderRadius: '8px' },
-                text: { top: '30%', left: '35%', maxWidth: '500px' },
-                content: `<h3>步驟 4-2：選擇項目</h3><p>步驟二：請從選單中<span class="text-highlight">點擊</span>「<b>水庫水情</b>」 <br>⭐請留意：之後的問卷將詢問 <span class="text-highlight">石門水庫的有效庫容量</span>，請您稍後在相關頁面中觀察並記下</p>`,
-                isInteractive: true
+                text: {
+                    content: `<h3>步驟 4-2：選擇項目</h3><p>步驟二：請從選單中<span class="text-highlight">點擊</span>「<b>水庫水情</b>」 <br>⭐請留意：之後的問卷將詢問 <span class="text-highlight">石門水庫的有效庫容量</span>，請您稍後在相關頁面中觀察並記下</p>`,
+                    maxWidth: '400px'
+                },
+                isInteractive: true,
+                textPosition: 'left'
             },
             {
                 useIframe: true,
-                highlight: { top: 'calc(100% - 76px)', left: 'calc(100% - 165px)', width: '145px', height: '48px', borderRadius: '50px' },
-                text: { top: '60%', left: '53%', maxWidth: '350px' },
-                content: `<h3>教學結束</h3><p>您已學會如何查找即時水情！點擊畫面任意處，然後點擊右下角的「下一頁」按鈕開始下一階段情境挑戰遊戲。</p>`,
-                isInteractive: false
+                // ✨ 新增 highlightTarget，值為「下一頁」按鈕的 CSS 選擇器
+                highlightTarget: '.next-page-button', 
+                text: {
+                    content: `<h3>教學結束</h3><p>若您完成上述步驟，請點擊高亮處的「下一頁」按鈕，開始下一階段的情境挑戰遊戲。</p>`,
+                    maxWidth: '350px'
+                },
+                // ✨ 現在我們可以為它設定智慧型定位了！
+                textPosition: 'top', 
+                isInteractive: true // 讓高亮框可以被點擊
             }
         ];
 
         let currentStep = -1;
 
+        // ==================================================================
+        // ======================= ✅ 修正後的函數 =========================
+        // ==================================================================
         function updateStepDisplay() {
-            if (currentStep < 0 || currentStep >= tutorialSteps.length) return;
-            const step = tutorialSteps[currentStep];
+    if (currentStep < 0 || currentStep >= tutorialSteps.length) return;
+    const step = tutorialSteps[currentStep];
 
-            let smallText = '';
-            if (!step.isInteractive) {
-                smallText = step.content.includes("教學結束")
-                    ? '<small>請點擊右下角按鈕開始模擬。</small>'
-                    : '<small>點擊畫面任意處繼續...</small>';
-            }
-            tutorialText.innerHTML = `${step.content}${smallText}`;
-            tutorialText.style.maxWidth = step.text.maxWidth || 'auto';
+    // 1. 更新文字內容 (邏輯不變)
+    let smallText = '';
+    if (!step.isInteractive) {
+        smallText = step.text.content.includes("教學結束")
+            ? '<small>請點擊右下角按鈕開始模擬。</small>'
+            : '<small>點擊畫面任意處繼續...</small>';
+    }
+    tutorialText.innerHTML = `${step.text.content}${smallText}`;
+    tutorialText.style.maxWidth = step.text.maxWidth || 'auto';
 
-            const positioner = (imgWidth, imgHeight) => {
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
-                const viewportRatio = viewportWidth / viewportHeight;
-                const imageRatio = imgWidth / imgHeight;
+    // ✨ [新增] 處理 highlightTarget 的邏輯
+    if (step.highlightTarget) {
+        const targetElement = document.querySelector(step.highlightTarget);
+        if (targetElement) {
+            const rect = targetElement.getBoundingClientRect();
+            const padding = 5; // 給高亮框一點呼吸空間
 
-                let renderedWidth, renderedHeight, offsetX, offsetY;
+            // 直接用讀取到的元素位置來設定 highlight
+            tutorialHighlight.style.top = `${rect.top - padding}px`;
+            tutorialHighlight.style.left = `${rect.left - padding}px`;
+            tutorialHighlight.style.width = `${rect.width + (padding * 2)}px`;
+            tutorialHighlight.style.height = `${rect.height + (padding * 2)}px`;
+            // 讓高亮框跟按鈕一樣圓
+            tutorialHighlight.style.borderRadius = '50px'; 
+            
+            // ✨ 讓文字框定位邏輯也能用於 target 模式
+            setTimeout(() => {
+                const textEl = tutorialText;
+                const textRect = textEl.getBoundingClientRect();
+                const gap = step.textOffset || 15;
+                const hTop = rect.top - padding;
+                const hLeft = rect.left - padding;
+                const hWidth = rect.width + (padding * 2);
+                const hHeight = rect.height + (padding * 2);
 
-                if (imageRatio > viewportRatio) { // Image is wider than viewport, letterboxed
-                    renderedWidth = viewportWidth;
-                    renderedHeight = renderedWidth / imageRatio;
-                    offsetX = 0;
-                    offsetY = (viewportHeight - renderedHeight) / 2;
-                } else { // Image is taller than viewport, pillarboxed
-                    renderedHeight = viewportHeight;
-                    renderedWidth = renderedHeight * imageRatio;
-                    offsetY = 0;
-                    offsetX = (viewportWidth - renderedWidth) / 2;
+                let newTextTop = 0, newTextLeft = 0;
+                
+                switch (step.textPosition) {
+                    case 'top':
+                        newTextTop = hTop - textRect.height - gap;
+                        newTextLeft = hLeft + hWidth / 2 - textRect.width / 2;
+                        break;
+                    case 'left':
+                        newTextTop = hTop + hHeight / 2 - textRect.height / 2;
+                        newTextLeft = hLeft - textRect.width - gap;
+                        break;
+                    // 可以根據需要添加 'right', 'bottom'
+                    default:
+                        newTextTop = hTop - textRect.height - gap;
+                        newTextLeft = hLeft + hWidth / 2 - textRect.width / 2;
+                        break;
                 }
 
-                // Calculate and apply styles in pixels for highlight
-                const h = step.highlight;
-                tutorialHighlight.style.top = `${offsetY + (parseFloat(h.top) / 100) * renderedHeight}px`;
-                tutorialHighlight.style.left = `${offsetX + (parseFloat(h.left) / 100) * renderedWidth}px`;
-                tutorialHighlight.style.width = `${(parseFloat(h.width) / 100) * renderedWidth}px`;
-                tutorialHighlight.style.height = `${(parseFloat(h.height) / 100) * renderedHeight}px`;
-                tutorialHighlight.style.borderRadius = h.borderRadius;
+                // 邊界檢查 (邏輯不變)
+                if (newTextTop < gap) newTextTop = gap;
+                if (newTextTop + textRect.height > window.innerHeight - gap) newTextTop = window.innerHeight - textRect.height - gap;
+                if (newTextLeft < gap) newTextLeft = gap;
+                if (newTextLeft + textRect.width > window.innerWidth - gap) newTextLeft = window.innerWidth - textRect.width - gap;
 
-                // Calculate and apply styles in pixels for text
-                const t = step.text;
-                tutorialText.style.top = `${offsetY + (parseFloat(t.top) / 100) * renderedHeight}px`;
-                tutorialText.style.left = `${offsetX + (parseFloat(t.left) / 100) * renderedWidth}px`;
-            };
-
-            if (step.useIframe) {
-                // For the last step, which uses calc() and px, keep original behavior as it's viewport-relative
-                if (step.highlight.top.includes('calc')) {
-                    Object.assign(tutorialHighlight.style, step.highlight);
-                    tutorialText.style.top = step.text.top;
-                    tutorialText.style.left = step.text.left;
-                } else {
-                    // For other iframe steps, assume a 16:9 aspect ratio for the embedded site
-                    // as we can't know its real dimensions. This is a heuristic.
-                    positioner(1920, 1080);
-                }
-            } else {
-                // For image-based steps, use the image's natural dimensions for accurate positioning
-                const img = new Image();
-                img.onload = function() {
-                    positioner(this.width, this.height);
-                };
-                img.src = step.background;
-            }
+                textEl.style.top = `${newTextTop}px`;
+                textEl.style.left = `${newTextLeft}px`;
+            }, 0);
         }
+        return; // 處理完 target 後就結束，不執行後續的 positioner
+    }
+
+
+    // 2. 定位器函數 (處理圖片背景，邏輯不變)
+    const positioner = (imgWidth, imgHeight) => {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const viewportRatio = viewportWidth / viewportHeight;
+        const imageRatio = imgWidth / imgHeight;
+
+        let renderedWidth, renderedHeight, offsetX, offsetY;
+
+        if (imageRatio > viewportRatio) {
+            renderedWidth = viewportWidth;
+            renderedHeight = renderedWidth / imageRatio;
+            offsetX = 0;
+            offsetY = (viewportHeight - renderedHeight) / 2;
+        } else {
+            renderedHeight = viewportHeight;
+            renderedWidth = renderedHeight * imageRatio;
+            offsetY = 0;
+            offsetX = (viewportWidth - renderedWidth) / 2;
+        }
+
+        const h = step.highlight;
+        const hTop = offsetY + (parseFloat(h.top) / 100) * renderedHeight;
+        const hLeft = offsetX + (parseFloat(h.left) / 100) * renderedWidth;
+        const hWidth = (parseFloat(h.width) / 100) * renderedWidth;
+        const hHeight = (parseFloat(h.height) / 100) * renderedHeight;
+
+        tutorialHighlight.style.top = `${hTop}px`;
+        tutorialHighlight.style.left = `${hLeft}px`;
+        tutorialHighlight.style.width = `${hWidth}px`;
+        tutorialHighlight.style.height = `${hHeight}px`;
+        tutorialHighlight.style.borderRadius = h.borderRadius;
+
+        setTimeout(() => {
+            const textEl = tutorialText;
+            const textRect = textEl.getBoundingClientRect();
+            const gap = step.textOffset || 15;
+            let newTextTop = 0, newTextLeft = 0;
+
+            switch (step.textPosition) {
+                case 'top':
+                    newTextTop = hTop - textRect.height - gap;
+                    newTextLeft = hLeft + hWidth / 2 - textRect.width / 2;
+                    break;
+                case 'right':
+                    newTextTop = hTop + hHeight / 2 - textRect.height / 2;
+                    newTextLeft = hLeft + hWidth + gap;
+                    break;
+                case 'left':
+                    newTextTop = hTop + hHeight / 2 - textRect.height / 2;
+                    newTextLeft = hLeft - textRect.width - gap;
+                    break;
+                case 'bottom':
+                default:
+                    newTextTop = hTop + hHeight + gap;
+                    newTextLeft = hLeft + hWidth / 2 - textRect.width / 2;
+                    break;
+            }
+
+            if (newTextTop < gap) newTextTop = gap;
+            if (newTextTop + textRect.height > viewportHeight - gap) newTextTop = viewportHeight - textRect.height - gap;
+            if (newTextLeft < gap) newTextLeft = gap;
+            if (newTextLeft + textRect.width > viewportWidth - gap) newTextLeft = viewportWidth - textRect.width - gap;
+
+            textEl.style.top = `${newTextTop}px`;
+            textEl.style.left = `${newTextLeft}px`;
+        }, 0);
+        };
+
+        // 根據步驟類型執行 (這裡的邏輯需要簡化)
+        if (step.useIframe && !step.highlightTarget) {
+            // 保留給未來可能出現的、沒有 target 的 iframe 步驟
+            Object.assign(tutorialHighlight.style, step.highlight);
+            tutorialText.style.top = step.text.top;
+            tutorialText.style.left = step.text.left;
+        } else {
+            const img = new Image();
+            img.onload = function() {
+                positioner(this.width, this.height);
+            };
+            img.src = step.background;
+        }
+    }
 
         function showStep(stepIndex) {
             if (stepIndex >= tutorialSteps.length) {
@@ -344,13 +522,18 @@
             } else {
                 externalSiteIframe.style.display = 'none';
                 tutorialBgImg.style.display = 'block';
-                const newSrc = new URL(step.background, window.location.href).href;
-                if (tutorialBgImg.src !== newSrc) {
-                    tutorialBgImg.style.opacity = 0;
-                    setTimeout(() => {
-                        tutorialBgImg.src = step.background;
-                        tutorialBgImg.style.opacity = 1;
-                    }, 300);
+                // 預加載圖片
+                const newImg = new Image();
+                newImg.src = step.background;
+                newImg.onload = () => {
+                    const newSrc = new URL(step.background, window.location.href).href;
+                    if (tutorialBgImg.src !== newSrc) {
+                        tutorialBgImg.style.opacity = 0;
+                        setTimeout(() => {
+                            tutorialBgImg.src = newSrc;
+                            tutorialBgImg.style.opacity = 1;
+                        }, 300);
+                    }
                 }
             }
 
@@ -361,6 +544,7 @@
         }
 
         function startTutorial() {
+            document.body.classList.add('tutorial-active');
             homeScreen.classList.remove('active');
             tutorialScreen.classList.add('active');
 
@@ -373,9 +557,20 @@
         }
 
         function endTutorial() {
+            document.body.classList.remove('tutorial-active');
             tutorialOverlay.classList.remove('active');
             nextPageButton.style.boxShadow = '0 0 20px 5px #f39c12';
             nextPageButton.style.transform = 'scale(1.1)';
+        }
+        
+        // 圖片預加載函數
+        function preloadTutorialImages() {
+            tutorialSteps.forEach(step => {
+                if (step.background) {
+                    const img = new Image();
+                    img.src = step.background;
+                }
+            });
         }
 
         startBtn.addEventListener('click', startTutorial);
@@ -392,30 +587,17 @@
                 showStep(currentStep + 1);
             }
         });
-
-        tutorialHighlight.addEventListener('dblclick', (e) => {
-            if (currentStep === 3) { // Only for Step 4-1
-                e.stopPropagation();
-                // Action moved to single click
+        
+        // 監聽視窗大小變化時，重新定位教學元素
+        window.addEventListener('resize', () => {
+            if (currentStep > -1) {
+                updateStepDisplay();
             }
         });
 
-        window.addEventListener('resize', updateStepDisplay);
+        // 頁面載入時就預加載圖片
+        preloadTutorialImages();
 
-        // 僅用於開發時獲取點擊座標，正式環境可移除
-        document.body.addEventListener('mousedown', function(e) {
-            if (!e.target.closest('#tutorial-overlay')) {
-                const xPercent = (e.clientX / window.innerWidth * 100).toFixed(1);
-                const yPercent = (e.clientY / window.innerHeight * 100).toFixed(1);
-                console.log(`點擊座標: { top: '${yPercent}%', left: '${xPercent}%' }`);
-            }
-        });
-    </script>
-</body>
-</html>ndow.innerHeight * 100).toFixed(1);
-                console.log(`點擊座標: { top: '${yPercent}%', left: '${xPercent}%' }`);
-            }
-        });
     </script>
 </body>
 </html>

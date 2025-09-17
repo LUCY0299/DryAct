@@ -518,14 +518,43 @@
 
         /* RWD 響應式調整 */
         @media (max-width: 768px) {
-            body { align-items: flex-start; padding: 10px; }
-            #game-container { padding: 15px; gap: 10px; min-height: auto; }
+            body { align-items: flex-start; padding: 10px; font-size: 14px; } /* 縮小基礎字體 */
+            #game-container { padding: 10px; gap: 10px; min-height: auto; width: 90%; }
             #game-play-area { height: auto; min-height: auto; gap: 15px; }
             #main-content-wrapper, #suggestion-screen, #voting-screen {
                 flex-direction: column; align-items: stretch; gap: 15px;
             }
             #left-panel-container, #right-panel { width: 100%; flex: none; }
-            h1 { font-size: 2.2em; } h2 { font-size: 1.5em; } h3 { font-size: 1.2em; }
+            h1 { font-size: 1.8em; } h2 { font-size: 1.4em; } h3 { font-size: 1.1em; }
+            p { font-size: 1em; }
+
+            #top-info { font-size: 0.9em; padding: 8px 15px; }
+
+            /* 當 body 有 is-splash-screen 這個 class 時，強制垂直置中 */
+            body.is-splash-screen {
+                align-items: center;
+            }
+
+            #question-area { padding: 10px; }
+            #question-area p { font-size: 1.1em; }
+            .choice-button { font-size: 0.95em; padding: 8px 12px; }
+            
+            #feedback-area, #knowledge-card { font-size: 0.9em; padding: 5px 10px; }
+            #learned-behaviors-list { padding: 10px; }
+            #learned-behaviors-list li { font-size: 0.9em; padding: 5px 8px; }
+
+            #reservoir-area { padding: 10px; }
+            #reservoir-container {
+                width: 90px;
+                height: 100px;
+            }
+            .light { width: 12px; height: 12px; }
+            #reservoir-area p { font-size: 0.9em; }
+
+            #suggestion-screen p, #voting-screen p { font-size: 1em; }
+            #suggestion-textarea { font-size: 1em; }
+            .vote-option { padding: 10px; }
+            .vote-option input[type="radio"] { margin-right: 10px; }
 
             /* RWD 下的「下一題」按鈕樣式 */
             #question-area #next-question-btn,
@@ -535,10 +564,12 @@
                 margin-right: 0;
                 top: auto; /* 重設 top */
                 right: auto; /* 重設 right */
+                padding: 5px 10px;
+                font-size: 0.85em;
             }
             /* 重設 padding 以適應靜態按鈕 */
-            #question-area { padding-top: 15px; } 
-            #suggestion-screen { padding-top: 15px; } 
+            #question-area { padding-top: 10px; }
+            #suggestion-screen { padding-top: 10px; }
         }
     </style>
 </head>
@@ -546,7 +577,7 @@
     <div id="game-container">
         <!-- 開始畫面 -->
         <div id="start-screen" class="game-screen">
-            <h1>乾旱風險情境模擬器</h1>
+            <h1>第二階段：乾旱風險情境模擬器</h1>
             <p>歡迎來到乾旱風險情境模擬器！在這個闖關遊戲中，您將面對社區水庫在乾旱期間的水情挑戰。</p>
             <p>您的每一個用水選擇，都將直接影響社區水庫的水位和您獲得的節水分數</p>
             <p><strong>遊戲目標：</strong>在規定題數內，維持社區水庫水位在安全線以上，並累積高分！</p>
@@ -812,6 +843,12 @@
                 screenElement.style.display = 'flex';
             } else {
                 screenElement.style.display = 'block';
+            }
+
+            if (screenElement.id === 'start-screen' || screenElement.id === 'end-screen') {
+                document.body.classList.add('is-splash-screen'); // 加上 class
+            } else {
+                document.body.classList.remove('is-splash-screen'); // 移除 class
             }
         }
 
