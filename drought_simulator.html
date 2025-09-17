@@ -708,7 +708,7 @@
         let communityWaterLevel = 0;
         let waterSavingScore = 0;
         let savedBehaviors = new Set();
-        const totalWeeks = 13;
+        const totalWeeks = 12;
 
         let userSuggestions = [
             { text: "用除濕機收集的水來拖地，一水多用。", votes: 15 },
@@ -738,8 +738,8 @@
                 question: "社區計畫在乾旱期間調度外縣市水源，您會支持哪項措施？",
                 choices: [
                     { text: "建立跨區備援管線，確保水源調度", waterChange: +10, scoreChange: 10, feedback: "太棒了！水庫水位上升了！", knowledgeCard: "跨區管線可在水情不均時快速調水，提升整體供水穩定性", behaviorLearned: "支持跨區水源備援" },
-                    { text: "改用地下水並不加限制地抽取", waterChange: -10, scoreChange: -5, feedback: "水庫水位下降了！過度抽取地下水會導致嚴重後果。", knowledgeCard: "過度抽取地下水會導致地層下陷、鹽化與水資源枯竭", behaviorLearned: null },
-                    { text: "直接從河川取水，不經處理", waterChange: -10, scoreChange: -5, feedback: "水庫水位下降了！這可能導致疾病傳播。", knowledgeCard: "河川水可能含有病原體與污染物，需處理後才能安全使用", behaviorLearned: null }
+                    { text: "改用地下水並不加限制地抽取", waterChange: -10, scoreChange: -10, feedback: "水庫水位下降了！過度抽取地下水會導致嚴重後果。", knowledgeCard: "過度抽取地下水會導致地層下陷、鹽化與水資源枯竭", behaviorLearned: null },
+                    { text: "直接從河川取水，不經處理", waterChange: -10, scoreChange: -10, feedback: "水庫水位下降了！這可能導致疾病傳播。", knowledgeCard: "河川水可能含有病原體與污染物，需處理後才能安全使用", behaviorLearned: null }
                 ]
             },
             {
@@ -762,16 +762,8 @@
                 question: "工業區遇到缺水危機，您建議哪種應變方案？",
                 choices: [
                     { text: "工業用水回收再利用", waterChange: +10, scoreChange: 10, feedback: "太棒了！水庫水位上升了！", knowledgeCard: "工業循環水可多次使用於清洗與冷卻，顯著減少新鮮水需求", behaviorLearned: "推行工業水循環利用" },
-                    { text: "直接停止所有工業運作", waterChange: -10, scoreChange: -5, feedback: "水庫水位下降了！這會對經濟造成巨大衝擊。", knowledgeCard: "停工雖能節水，但對經濟影響巨大，應優先採取節水與備援方案", behaviorLearned: null },
-                    { text: "將污水直接排入河川", waterChange: -10, scoreChange: -5, feedback: "水庫水位下降了！這會導致嚴重的環境污染。", knowledgeCard: "未處理排放會污染水源，增加後續淨化難度與成本", behaviorLearned: null }
-                ]
-            },
-            {
-                question: "您計畫種植耐旱作物以應對缺水，以下哪種選擇正確？",
-                choices: [
-                    { text: "大量種植需水量高的水稻", waterChange: -10, scoreChange: -10, feedback: "水庫水位下降了！這會加速水資源耗盡。", knowledgeCard: "水稻需水量高，不適合缺水季節大規模種植", behaviorLearned: null },
-                    { text: "種植需水量低的作物如高粱", waterChange: +10, scoreChange: 10, feedback: "做得好！您節省了大量用水，水庫水位上升了！", knowledgeCard: "耐旱作物在低水環境下仍能維持產量，是農業抗旱的重要策略", behaviorLearned: "種植耐旱作物" },
-                    { text: "種熱帶果樹並每日大量澆水", waterChange: -10, scoreChange: -10, feedback: "水庫水位下降了！這會增加用水壓力。", knowledgeCard: "高頻率澆水會顯著增加農業用水壓力", behaviorLearned: null }
+                    { text: "直接停止所有工業運作", waterChange: -10, scoreChange: -10, feedback: "水庫水位下降了！這會對經濟造成巨大衝擊。", knowledgeCard: "停工雖能節水，但對經濟影響巨大，應優先採取節水與備援方案", behaviorLearned: null },
+                    { text: "將污水直接排入河川", waterChange: -10, scoreChange: -10, feedback: "水庫水位下降了！這會導致嚴重的環境污染。", knowledgeCard: "未處理排放會污染水源，增加後續淨化難度與成本", behaviorLearned: null }
                 ]
             },
             {
@@ -794,8 +786,8 @@
                 question: "當地政府推動智慧水表的主要目的為何？",
                 choices: [
                     { text: "監測用水量、及早發現異常", waterChange: +10, scoreChange: 10, feedback: "太棒了！水庫水位上升了！", knowledgeCard: "智慧水表可即時發現漏水與異常用水，降低浪費", behaviorLearned: "使用智慧監測系統" },
-                    { text: "減少電力消耗", waterChange: -10, scoreChange: -5, feedback: "水庫水位下降了！這與智慧水表的主要功能不符。", knowledgeCard: "智慧水表的主要功能是用水監測，非電力管理", behaviorLearned: null },
-                    { text: "控制家中溫度", waterChange: -10, scoreChange: -5, feedback: "水庫水位下降了！智慧水表與溫控無關。", knowledgeCard: "智慧水表與室內溫控無關，其核心功能是用水數據收集與分析", behaviorLearned: null }
+                    { text: "減少電力消耗", waterChange: -10, scoreChange: -10, feedback: "水庫水位下降了！這與智慧水表的主要功能不符。", knowledgeCard: "智慧水表的主要功能是用水監測，非電力管理", behaviorLearned: null },
+                    { text: "控制家中溫度", waterChange: -10, scoreChange: -10, feedback: "水庫水位下降了！智慧水表與溫控無關。", knowledgeCard: "智慧水表與室內溫控無關，其核心功能是用水數據收集與分析", behaviorLearned: null }
                 ]
             },
             {
@@ -889,12 +881,13 @@
                 const targetScreen = document.getElementById(scenario.screenId);
                 targetScreen.style.display = 'flex';
                 
-                if (week === 12) { // 當前是第12題，即建議提交畫面
+                 // 修正後的邏輯：根據正確的週數（題號）來設定對應的畫面
+                if (week === 11) { // 這是第11題: 建議提交畫面
                     suggestionTextarea.value = '';
                     submitSuggestionBtn.disabled = false;
-                    suggestionNextBtn.style.display = 'block'; // 確保第12題的下一題按鈕顯示
+                    suggestionNextBtn.style.display = 'block'; 
                     targetScreen.classList.add('with-next-btn');
-                } else if (week === 13) { // 當前是第13題，即投票畫面
+                } else if (week === 12) { // 這是第12題: 投票畫面
                     prepareVotingOptions();
                 }
             } else {
@@ -948,12 +941,11 @@
             nextQuestionBtn.style.display = 'none'; // 隱藏主遊戲區的下一題按鈕
             document.getElementById('question-area').classList.remove('with-next-btn'); // 移除 class
 
-            // 隱藏第12題的下一題按鈕
-            if (currentWeek === 12 && suggestionNextBtn) {
+             // 修正後的邏輯：在離開第11題後隱藏按鈕
+            if (currentWeek === 11 && suggestionNextBtn) {
                 suggestionNextBtn.style.display = 'none';
                 document.getElementById('suggestion-screen').classList.remove('with-next-btn');
             }
-
 
             document.querySelectorAll('#learned-behaviors-list li.highlight').forEach(item => {
                 item.classList.remove('highlight');
@@ -1057,8 +1049,9 @@
             const suggestion = suggestionTextarea.value.trim();
             if (suggestion) {
                 userSuggestions.push({ text: suggestion, votes: 1 });
-                waterSavingScore += 15;
-                communityWaterLevel += 5;
+                // 根據要求，第11題不計分
+                // waterSavingScore += 15;
+                // communityWaterLevel += 5;
                 savedBehaviors.add("分享節水建議");
                 addNewBehaviorToList("分享節水建議");
             }
@@ -1111,8 +1104,9 @@
                 originalOption.votes++;
             }
             
-            waterSavingScore += 10;
-            communityWaterLevel += 5;
+            // 根據要求，第12題不計分
+            // waterSavingScore += 10;
+            // communityWaterLevel += 5;
             savedBehaviors.add("參與社群投票");
             addNewBehaviorToList("參與社群投票");
 
