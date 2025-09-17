@@ -206,6 +206,13 @@
         function animate(){requestAnimationFrame(animate),ctx.clearRect(0,0,innerWidth,innerHeight);for(let t=0;t<particlesArray.length;t++)particlesArray[t].update();connect()}
         window.addEventListener("resize",()=>{canvas.width=innerWidth,canvas.height=innerHeight,init()}),init(),animate();
 
+        // --- 圖片預加載邏輯 ---
+        function preloadImages(urls) {
+            urls.forEach(url => {
+                const img = new Image();
+                img.src = url;
+            });
+        }
 
         // --- 頁面切換與教學引導邏輯 ---
         const startBtn = document.getElementById('start-btn');
@@ -217,6 +224,9 @@
         const tutorialHighlight = document.getElementById('tutorial-highlight');
         const tutorialText = document.getElementById('tutorial-text');
         const nextPageButton = document.querySelector('.next-page-button');
+
+        // 在腳本開始時就呼叫預加載函式
+        preloadImages(['page1.jpg', 'page2.jpg', 'page3.jpg', 'page4.jpg', 'dry-logo.png']);
 
         const tutorialSteps = [
             {
@@ -407,12 +417,6 @@
             if (!e.target.closest('#tutorial-overlay')) {
                 const xPercent = (e.clientX / window.innerWidth * 100).toFixed(1);
                 const yPercent = (e.clientY / window.innerHeight * 100).toFixed(1);
-                console.log(`點擊座標: { top: '${yPercent}%', left: '${xPercent}%' }`);
-            }
-        });
-    </script>
-</body>
-</html>ndow.innerHeight * 100).toFixed(1);
                 console.log(`點擊座標: { top: '${yPercent}%', left: '${xPercent}%' }`);
             }
         });
